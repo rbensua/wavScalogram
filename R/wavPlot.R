@@ -1,27 +1,44 @@
 #' @title Wavelet plots
 #'
-#' @description This function plots a function of two variables (usually times and scales). It is suitable for plotting windowed scalograms,
-#' windowed scalogram differences, wavelet coherences and windowed scale indices.
+#' @description This function plots a function of two variables (usually times and
+#' scales). It is suitable for plotting windowed scalograms, windowed scalogram
+#' differences, wavelet coherences and windowed scale indices.
 #'
-#' @usage wavPlot(Z, X, Y, Ylog, Yrev, coi, rdist, sig95, sig05, Xname, Yname, Zname)
+#' @usage wavPlot(Z,
+#'                X = NULL,
+#'                Y = NULL,
+#'                Ylog = FALSE,
+#'                Yrev = TRUE,
+#'                coi = NULL,
+#'                rdist = NULL,
+#'                sig95 = NULL,
+#'                sig05 = NULL,
+#'                Xname = "X",
+#'                Yname = "Y",
+#'                Zname = "Z")
 #'
 #' @param Z A matrix with the images of the function to be plotted.
 #' @param X A vector with x-coordinates (times).
 #' @param Y A vector with y-coordinates (scales).
 #' @param Ylog Logical. Considers logarithmic scale for the y-axis.
 #' @param Yrev Logical. Considers reverse the y-axis.
-#' @param coi A vector of size \code{length(X)} with the y-coordinates of the frontier of the cone of influence.
-#' @param rdist Numeric. Only for WSD plots, margin in the y-axis where appear border effects.
-#' @param sig95 Logical matrix with the same size as Z.
-#'   TRUE if the corresponding point in Z is inside the significance at 95\%.
-#' @param sig05 Logical matrix with the same size as Z.
-#'   TRUE if the corresponding point in Z is inside the significance at 5\%.
+#' @param coi A vector of size \code{length(X)} with the y-coordinates of the frontier of
+#' the cone of influence.
+#' @param rdist Numeric. Only for WSD plots, margin in the y-axis where appear border
+#' effects.
+#' @param sig95 Logical matrix with the same size as Z. TRUE if the corresponding point in
+#' Z is inside the significance at 95\%.
+#' @param sig05 Logical matrix with the same size as Z. TRUE if the corresponding point in
+#' Z is inside the significance at 5\%.
 #' @param Xname A string with the name of the x-axis.
 #' @param Yname A string with the name of the y-axis.
 #' @param Zname A string with the name of the function.
 #'
 #' @importFrom colorRamps matlab.like
 #' @importFrom fields image.plot
+#' @importFrom grDevices colorRampPalette rgb
+#' @importFrom graphics axis contour image lines plot segments
+#' @importFrom stats quantile rnorm sd
 #'
 #' @examples
 #'
@@ -33,8 +50,9 @@
 #' signal2[500:1000] = signal2[500:1000] + sin((500:1000) / 2)
 #' \dontrun{
 #' wsd <- wsd(signal1 = signal1, signal2 = signal2, mc_nrand = 10, makefigure = FALSE)
-#' wavPlot(Z = -log2(wsd$wsd), X = wsd$t, Y = wsd$scales, Ylog = TRUE, coi = wsd$coi, rdist = wsd$rdist,
-#'         sig95 = wsd$signif95, sig05 = wsd$signif05, Xname = "Time", Yname = "Scale", Zname = "-log2(WSD)")
+#' wavPlot(Z = -log2(wsd$wsd), X = wsd$t, Y = wsd$scales, Ylog = TRUE, coi = wsd$coi,
+#'         rdist = wsd$rdist, sig95 = wsd$signif95, sig05 = wsd$signif05, Xname = "Time",
+#'         Yname = "Scale", Zname = "-log2(WSD)")
 #' }
 #'
 #' @export
@@ -173,9 +191,9 @@ wavPlot <-
 
 add.alpha <- function(COLORS, ALPHA){
   if(missing(ALPHA)) stop("provide a value for alpha between 0 and 1")
-  RGB <- col2rgb(COLORS, alpha=TRUE)
+  RGB <- grDevices::col2rgb(COLORS, alpha=TRUE)
   RGB[4,] <- round(RGB[4,]*ALPHA)
-  NEW.COLORS <- rgb(RGB[1,], RGB[2,], RGB[3,], RGB[4,], maxColorValue = 255)
+  NEW.COLORS <- grDevices::rgb(RGB[1,], RGB[2,], RGB[3,], RGB[4,], maxColorValue = 255)
   return(NEW.COLORS)
 }
 

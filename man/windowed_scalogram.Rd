@@ -4,40 +4,55 @@
 \alias{windowed_scalogram}
 \title{Windowed scalograms of a signal}
 \usage{
-windowed_scalogram(signal, scales, powerscales, windowrad, delta_t, wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam, border_effects = c("BE", "INNER", "PER", "SYM"), energy_density, makefigure)
+windowed_scalogram(signal,
+                          scales = NULL,
+                          powerscales = TRUE,
+                          windowrad = NULL,
+                          delta_t = NULL,
+                          wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+                          wparam = NULL,
+                          border_effects = c("BE", "INNER", "PER", "SYM"),
+                          energy_density = TRUE,
+                          makefigure = FALSE)
 }
 \arguments{
-\item{signal}{A vector containing the signal whose wavelet transform is wanted. The unit of time is taken as the time difference between two consecutive data.}
+\item{signal}{A vector containing the signal whose wavelet transform is wanted. The
+unit of time is taken as the time difference between two consecutive data.}
 
-\item{scales}{A vector containing the wavelet scales measured in units of time. This can be either a vector with all the scales, or (if \code{powerscales = TRUE})
-following Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum scale and the number of suboctaves per octave.}
+\item{scales}{A vector containing the wavelet scales measured in units of time. This
+can be either a vector with all the scales, or (if \code{powerscales = TRUE}) following
+Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum
+scale and the number of suboctaves per octave.}
 
 \item{powerscales}{Logical. Construct power 2 scales.}
 
 \item{windowrad}{Numeric. Radius for the time windows.}
 
-\item{delta_t}{Numeric. Increment of time for the construction of windows central times.}
+\item{delta_t}{Numeric. Increment of time for the construction of windows central
+times.}
 
-\item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
+\item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
 \item{wparam}{Numeric. Parameters of the corresponding wavelet.}
 
 \item{border_effects}{String, equal to "BE", "INNER", "PER" or "SYM",
-which indicates how to manage the border effects which arise usually when a convolution is
-performed on finite-lenght signals.
+which indicates how to manage the border effects which arise usually when a convolution
+is performed on finite-lenght signals.
 \itemize{
 \item "BE": With border effects, padding time series with zeroes.
 \item "INNER": Normalized inner scalogram with security margin adapted for each
-    different scale. Altough there are no border effects, it is shown as a regular COI the zone in which the
-    length of \eqn{J(s)} (see Benítez et al. 2010) is smaller and it has to be normalized.
+    different scale. Altough there are no border effects, it is shown as a regular COI
+    the zone in which the length of \eqn{J(s)} (see Benítez et al. 2010) is smaller and
+    it has to be normalized.
 \item "PER": With border effects, using boundary wavelets (periodization of the
 original time series).
 \item "SYM": With border effects, using a symmetric catenation of the original time
 series.
 }}
 
-\item{energy_density}{Logical. Divide the scalograms by sqrt(scales) for convert them into
-energy density (defaults to TRUE).}
+\item{energy_density}{Logical. Divide the scalograms by sqrt(scales) for convert them
+into energy density (defaults to TRUE).}
 
 \item{makefigure}{Logical. Plots a figure with the scalogram.}
 }
@@ -51,22 +66,26 @@ the values of the windowed scalograms at each scale and at each time window.
 
 \code{scales}: The vector of the scales.
 
-\code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the values of
-the maximum scale from which there are border effects for the respective windowed scalogram.
+\code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the values
+of the maximum scale from which there are border effects for the respective windowed
+scalogram.
 }
 \description{
-This function computes the normalized windowed scalograms of a signal for the scales given.
-It is computed using time windows with radius \code{windowrad} centered at a vector of central times with
-increment of time \code{delta_t}. It is important to note that the notion of scalogram here is
-analogous to the spectrum of the Fourier transform. It gives the contribution of each scale to the total energy
-of the signal. For each scale \eqn{s} and central time \eqn{tc}, it is defined as the square root of the
-integral of the squared modulus of the wavelet transform w.r.t the time variable \eqn{t}, i.e.
+This function computes the normalized windowed scalograms of a signal for
+the scales given. It is computed using time windows with radius \code{windowrad}
+centered at a vector of central times with increment of time \code{delta_t}. It is
+important to note that the notion of scalogram here is analogous to the spectrum of the
+Fourier transform. It gives the contribution of each scale to the total energy of the
+signal. For each scale \eqn{s} and central time \eqn{tc}, it is defined as the square
+root of the integral of the squared modulus of the wavelet transform w.r.t the time
+variable \eqn{t}, i.e.
 
-  \deqn{WS_{windowrad}(tc,s):= (\int_{tc-windowrad}^{tc+windowrad}|Wf(t,s)|^2 dt)^{1/2}.}{%
-  WS_{windowrad}(tc,s):=(integral_{tc-windowrad}^{tc+windowrad}|Wf(t,s)|^2 dt)^{1/2}.}
+  \deqn{WS_{windowrad}(tc,s):=
+  (\int_{tc-windowrad}^{tc+windowrad}|Wf(t,s)|^2 dt)^{1/2}.}{WS_{windowrad}(tc,s):=
+  (integral_{tc-windowrad}^{tc+windowrad}|Wf(t,s)|^2 dt)^{1/2}.}
 
-"Normalized" means that the windowed scalograms are divided by the square root of the length of the respective
-time windows in order to be comparable between them.
+"Normalized" means that the windowed scalograms are divided by the square root of the
+length of the respective time windows in order to be comparable between them.
 }
 \section{References}{
 
@@ -74,11 +93,11 @@ time windows in order to be comparable between them.
 C. Torrence, G. P. Compo. A practical guide to wavelet analysis. B. Am. Meteorol. Soc.
 79 (1998), 61–78.
 
-V. J. Bolós, R. Benítez, R. Ferrer, R. Jammazi. The windowed scalogram difference: a novel wavelet tool for comparing time series.
-Appl. Math. Comput., 312 (2017), 49-65.
+V. J. Bolós, R. Benítez, R. Ferrer, R. Jammazi. The windowed scalogram difference: a
+novel wavelet tool for comparing time series. Appl. Math. Comput., 312 (2017), 49-65.
 
-R. Benítez, V. J. Bolós, M. E. Ramírez. A wavelet-based tool for studying non-periodicity.
-Comput. Math. Appl. 60 (2010), no. 3, 634-641.
+R. Benítez, V. J. Bolós, M. E. Ramírez. A wavelet-based tool for studying
+non-periodicity. Comput. Math. Appl. 60 (2010), no. 3, 634-641.
 }
 
 \examples{

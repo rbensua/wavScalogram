@@ -4,14 +4,18 @@
 \alias{cwt_wst}
 \title{Continuous wavelet transform}
 \usage{
-cwt_wst(scales, signal, wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam)
+cwt_wst(scales,
+               signal,
+               wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+               wparam = NULL)
 }
 \arguments{
 \item{scales}{A vector with the wavelet scales.}
 
 \item{signal}{A vector containing the sigal whose wavelet transform is wanted.}
 
-\item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
+\item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
 \item{wparam}{The corresponding nondimensional parameter for the wavelet function.}
 }
@@ -20,10 +24,10 @@ A matrix of size length(signal) x length(scales),
 containing the CWT coefficients of the signal.
 }
 \description{
-This function computes the continuous wavelet transform for some families of wavelet bases:
-"MORLET", "DOG", "PAUL" and "HAAR".
-It is a translation from the Matlab(R) function published by Torrence
-and Compo (Torrence & Compo, 1998).
+This function computes the continuous wavelet transform for some families of wavelet
+bases: "MORLET", "DOG", "PAUL" and "HAAR".
+It is a translation from the Matlab(R) function published by Torrence and Compo
+(Torrence & Compo, 1998).
 }
 \section{References}{
 

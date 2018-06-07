@@ -1,35 +1,57 @@
 #' @title Windowed scale index
 #'
-#' @description This function computes the windowed scale indices of a signal in the scale interval \eqn{[s_0,s_1]},
-#' for a given set of scale parameters \eqn{s_1} and taking \eqn{s_0} as the minimum scale (see Benítez et al. 2010).
+#' @description This function computes the windowed scale indices of a signal in the scale
+#' interval \eqn{[s_0,s_1]}, for a given set of scale parameters \eqn{s_1} and taking
+#' \eqn{s_0} as the minimum scale (see Benítez et al. 2010).
 #'
-#' The windowed scale index of a signal in the scale interval \eqn{[s_0,s_1]} centered at time \eqn{tc} and
-#' with time windows radius \code{windowrad} is given by the quotient
-#' \deqn{\frac{WS_{windowrad}(tc,s_{min})}{WS_{windowrad}(tc,s_{max})},}{WS_{windowrad}(tc,s_{min})/WS_{windowrad}(tc,s_{max}),}
-#' where \eqn{WS_{windowrad}} is the corresponding windowed scalogram with time windows radius
-#' \code{windowrad}, \eqn{s_{max} in [s_0,s_1]} is the
-#' smallest scale such that \eqn{WS_{windowrad}(tc,s)\le WS_{windowrad}(tc,s_{max})} for all \eqn{s in [s_0,s_1]}, and \eqn{s_{min} in [s_{max},2s_1]}
-#' is the smallest scale such that \eqn{WS_{windowrad}(tc,s_{min})\le WS_{windowrad}(tc,s)} for all \eqn{s in [s_{max},2s_1]}.
+#' The windowed scale index of a signal in the scale interval \eqn{[s_0,s_1]} centered at
+#' time \eqn{tc} and with time windows radius \code{windowrad} is given by the quotient
+#' \deqn{\frac{WS_{windowrad}(tc,s_{min})}{WS_{windowrad}(tc,s_{max})},}{WS_{windowrad}
+#' (tc,s_{min})/WS_{windowrad}(tc,s_{max}),}
+#' where \eqn{WS_{windowrad}} is the corresponding windowed scalogram with time windows
+#' radius \code{windowrad}, \eqn{s_{max} in [s_0,s_1]} is the smallest scale such that
+#' \eqn{WS_{windowrad}(tc,s)\le WS_{windowrad}(tc,s_{max})} for all \eqn{s in [s_0,s_1]},
+#' and \eqn{s_{min} in [s_{max},2s_1]} is the smallest scale such that
+#' \eqn{WS_{windowrad}(tc,s_{min})\le WS_{windowrad}(tc,s)} for all
+#' \eqn{s in [s_{max},2s_1]}.
 #'
-#' @usage windowed_scale_index(signal, scales, powerscales, s1, windowrad, delta_t, wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam, border_effects = c("BE", "INNER", "PER", "SYM"), makefigure)
+#' @usage windowed_scale_index(signal,
+#'                             scales = NULL,
+#'                             powerscales = TRUE,
+#'                             s1 = NULL,
+#'                             windowrad = NULL,
+#'                             delta_t = NULL,
+#'                             wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+#'                             wparam = NULL,
+#'                             border_effects = c("BE", "INNER", "PER", "SYM"),
+#'                             makefigure = FALSE)
 #'
-#' @param signal A vector containing the signal whose windowed scale indices are wanted. The unit of time is taken as the time difference between two consecutive data.
-#' @param scales A vector containing the wavelet scales measured in units of time. This can be either a vector with all the scales, or (if \code{powerscales = TRUE})
-#'   following Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum scale and the number of suboctaves per octave.
+#' @param signal A vector containing the signal whose windowed scale indices are wanted.
+#' The unit of time is taken as the time difference between two consecutive data.
+#' @param scales A vector containing the wavelet scales measured in units of time. This
+#' can be either a vector with all the scales, or (if \code{powerscales = TRUE})
+#' following Torrence and Compo 1998, a vector of three elements with the minimum scale,
+#' the maximum scale and the number of suboctaves per octave.
 #' @param powerscales Logical. Construct power 2 scales.
-#' @param s1 A vector containing the scales \eqn{s_1}. The windowed scale indices are computed in the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale.
+#' @param s1 A vector containing the scales \eqn{s_1}. The windowed scale indices are
+#' computed in the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale.
 #' @param windowrad Numeric. Radius for the time windows.
-#' @param delta_t Numeric. Increment of time for the construction of windows central times.
-#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
+#' @param delta_t Numeric. Increment of time for the construction of windows central
+#' times.
+#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+#' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
 #' @param wparam Numeric. Parameters of the corresponding wavelet.
-#' @param border_effects A string, equal to "BE", "INNER", "PER" or "SYM", which indicates how to manage the border effects
-#'   which arise usually when a convolution is performed on finite-lenght signals.
+#' @param border_effects A string, equal to "BE", "INNER", "PER" or "SYM", which indicates
+#' how to manage the border effects which arise usually when a convolution is performed on
+#' finite-lenght signals.
 #' \itemize{
 #' \item "BE": With border effects, padding time series with zeroes.
-#' \item "INNER": Normalized inner scalogram with security margin adapted for each different scale.
+#' \item "INNER": Normalized inner scalogram with security margin adapted for each
+#' different scale.
 #' \item "PER": With border effects, using boundary wavelets (periodization of the
 #' original time series).
-#' \item "SYM": With border effects, using a symmetric catenation of the original time series.
+#' \item "SYM": With border effects, using a symmetric catenation of the original time
+#' series.
 #' }
 #' @param makefigure Logical. Plots a figure with the windowed scale indices.
 #'
@@ -38,16 +60,18 @@
 #' \code{wsi}: A matrix of size \code{length(tcentral)}x\code{length(s1)} containing
 #' the values of the corresponding windowed scale indices.
 #'
-#' \code{smax}: A vector of length \code{length(tcentral)} containing the scales \eqn{s_{max}}.
+#' \code{smax}: A vector of length \code{length(tcentral)} containing the scales
+#' \eqn{s_{max}}.
 #'
-#' \code{smin}: A vector of length \code{length(tcentral)} containing the scales \eqn{s_{min}}.
+#' \code{smin}: A vector of length \code{length(tcentral)} containing the scales
+#' \eqn{s_{min}}.
 #'
 #' \code{tcentral}: The vector of central times used in the computation of the \code{wsi}.
 #'
 #' \code{s1}: The vector of scales \eqn{s_1}.
 #'
-#' \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the values of
-#' the maximum scale from which there are border effects.
+#' \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the values
+#' of the maximum scale from which there are border effects.
 #'
 #' @importFrom fields image.plot
 #' @importFrom colorRamps matlab.like
@@ -59,8 +83,8 @@
 #'
 #' @section References:
 #'
-#' R. Benítez, V. J. Bolós, M. E. Ramírez. A wavelet-based tool for studying non-periodicity.
-#' Comput. Math. Appl. 60 (2010), no. 3, 634-641.
+#' R. Benítez, V. J. Bolós, M. E. Ramírez. A wavelet-based tool for studying
+#' non-periodicity. Comput. Math. Appl. 60 (2010), no. 3, 634-641.
 #'
 #' @export
 #'

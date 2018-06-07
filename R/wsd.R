@@ -1,78 +1,110 @@
 #' @title Windowed Scalogram Difference
 #'
-#' @description This function computes the Windowed Scalogram Difference of two signals. The definition and details
-#' can be found in (Bolós et al. 2017).
+#' @description This function computes the Windowed Scalogram Difference of two signals.
+#' The definition and details can be found in (Bolós et al. 2017).
 #'
-#' @usage wsd(signal1, signal2, scaleparam, delta_t, windowrad, rdist, normalize, wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam, border_effects = c("BE", "INNER", "PER", "SYM"), mc_nrand, commutative, wscnoise, compensation, energy_density, parallel, makefigure)
+#' @usage wsd(signal1,
+#'            signal2,
+#'            scaleparam = NULL,
+#'            delta_t = NULL,
+#'            windowrad = NULL,
+#'            rdist = NULL,
+#'            normalize = FALSE,
+#'            wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+#'            wparam = NULL,
+#'            border_effects = c("BE", "INNER", "PER", "SYM"),
+#'            mc_nrand = 0,
+#'            commutative = TRUE,
+#'            wscnoise = 0.02,
+#'            compensation = 0,
+#'            energy_density = TRUE,
+#'            parallel = FALSE,
+#'            makefigure = TRUE)
 #'
 #' @param signal1 A vector containing the first signal.
-#' @param signal2 A vector containing the second signal (its length should be equal to that of \code{signal1})
-#' @param scaleparam A vector of three elements with the minimum scale, the maximum scale and the number
-#'          of suboctaves per octave for constructing power 2 scales (following Torrence and Compo 1998),
-#'          measured in units of time.
-#' @param delta_t Numeric. Increment of time for the construction of windows central times.
+#' @param signal2 A vector containing the second signal (its length should be equal to
+#' that of \code{signal1}).
+#' @param scaleparam A vector of three elements with the minimum scale, the maximum scale
+#' and the number of suboctaves per octave for constructing power 2 scales (following
+#' Torrence and Compo 1998), measured in units of time.
+#' @param delta_t Numeric. Increment of time for the construction of windows central
+#' times.
 #' @param windowrad Numeric. Time radius for the windows.
 #' @param rdist Numeric. Log-scale radius for the windows measured in suboctaves.
 #' @param normalize Logical. Set to TRUE if the signals use different units.
-#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
+#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+#' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
 #' @param wparam Numeric. Parameters of the corresponding wavelet.
 #' @param border_effects String, equal to "BE", "INNER", "PER" or "SYM",
-#' which indicates how to manage the border effects which arise usually when a convolution is
-#' performed on finite-lenght signals.
+#' which indicates how to manage the border effects which arise usually when a convolution
+#' is performed on finite-lenght signals.
 #' \itemize{
 #' \item "BE": With border effects, padding time series with zeroes.
-#' \item "INNER": Normalized inner scalogram with security margin adapted for each different scale.
+#' \item "INNER": Normalized inner scalogram with security margin adapted for each
+#' different scale.
 #' \item "PER": With border effects, using boundary wavelets (periodization of the
 #' original time series).
 #' \item "SYM": With border effects, using a symmetric catenation of the original time
 #' series.
 #' }
-#' @param mc_nrand Integer. Number of Montecarlo simulations to be performed in order to determine the 95\% and 5\% significance contours.
-#' @param commutative Logical. If TRUE (default) the commutative windowed scalogram difference. Otherwise a non-commutative (but simpler) version is computed
-#' (see Bolós et al. 2017).
-#' @param wscnoise Numeric in \eqn{[0,1]}. If a (windowed) scalogram takes values close to zero, some problems may appear because we are considering relative differences.
-#'   Specifically, we can get high relative differences that in fact are not relevant, or even divisions by zero.
+#' @param mc_nrand Integer. Number of Montecarlo simulations to be performed in order to
+#' determine the 95\% and 5\% significance contours.
+#' @param commutative Logical. If TRUE (default) the commutative windowed scalogram
+#' difference. Otherwise a non-commutative (but simpler) version is computed (see Bolós et
+#' al. 2017).
+#' @param wscnoise Numeric in \eqn{[0,1]}. If a (windowed) scalogram takes values close to
+#' zero, some problems may appear because we are considering relative differences.
+#' Specifically, we can get high relative differences that in fact are not relevant, or
+#' even divisions by zero.
 #'
-#'   If we consider absolute differences this would not happen but, on the other hand, using absolute differences is not appropriate for scalogram values not close to zero.
+#'   If we consider absolute differences this would not happen but, on the other hand,
+#'   using absolute differences is not appropriate for scalogram values not close to zero.
 #'
-#'   So, the parameter \code{wscnoise} stablishes a threshold for the scalogram values above which a relative difference is computed,
-#'   and below which a difference proportional to the absolute difference is computed (the proportionality factor is determined by requiring continuity).
+#'   So, the parameter \code{wscnoise} stablishes a threshold for the scalogram values
+#'   above which a relative difference is computed, and below which a difference
+#'   proportional to the absolute difference is computed (the proportionality factor is
+#'   determined by requiring continuity).
 #'
-#'   Finally, \code{wscnoise} can be interpreted as the relative amplitude of the noise in the scalograms
-#'   and is chosen in order to make a relative (\eqn{= 0}), absolute (\eqn{= 1}) or mix (in \eqn{]0,1[}) difference between scalograms.
-#'   Default value is set to \eqn{0.02}.
-#' @param compensation Numeric in \eqn{[0,1]}. It is an alternative to \code{wscnoise} for preventing numerical errors or non-relevant high relative differences
-#'   when scalogram values are close to zero (see Bolós et al. 2017).
-#' @param energy_density Logical. Divide the scalograms by \eqn{\sqrt(scales)} for convert them into
-#' energy density (defaults to TRUE). Note that it does not affect the results if \code{wscnoise} \eqn{= 0}.
-#' @param parallel Logical. If TRUE (default) uses function \code{parApply} from package \code{parallel} for the Montecarlo simulations.
-#' When FALSE is uses the normal \code{apply} function.
-#' @param makefigure Logical. Plots a figure with the WSD
+#'   Finally, \code{wscnoise} can be interpreted as the relative amplitude of the noise in
+#'   the scalograms and is chosen in order to make a relative (\eqn{= 0}), absolute
+#'   (\eqn{= 1}) or mix (in \eqn{(0,1)}) difference between scalograms. Default value is
+#'   set to \eqn{0.02}.
+#' @param compensation Numeric in \eqn{[0,1]}. It is an alternative to \code{wscnoise} for
+#' preventing numerical errors or non-relevant high relative differences when scalogram
+#' values are close to zero (see Bolós et al. 2017).
+#' @param energy_density Logical. Divide the scalograms by \eqn{\sqrt(scales)} for convert
+#' them into energy density (defaults to TRUE). Note that it does not affect the results
+#' if \code{wscnoise} \eqn{= 0}.
+#' @param parallel Logical. If TRUE (default) uses function \code{parApply} from package
+#' \code{parallel} for the Montecarlo simulations. When FALSE is uses the normal
+#' \code{apply} function.
+#' @param makefigure Logical. Plots a figure with the WSD.
 #'
-#' @importFrom parallel parApply
+#' @importFrom parallel parApply detectCores makeCluster stopCluster
 #' @importFrom abind abind
-#' @importFrom scales trans_new log_breaks
-#' @import dplyr
 #'
 #' @return A list with the following fields:
 #'
 #' \code{wsd}: A matrix of size \code{length(tcentral)}x\code{length(scales)} containing
 #' the values of the windowed scalogram differences at each scale and at each time window.
 #'
-#' \code{t}: The vector of central times used in the computations of the windowed scalograms.
+#' \code{t}: The vector of central times used in the computations of the windowed
+#' scalograms.
 #'
 #' \code{scales}: The vector of scales used in the computations.
 #'
-#' \code{coi}: A vector of length \code{length(tcentral)} containing the values of the maximum
-#'   scale from which there are border effects for the windowed scalograms.
+#' \code{coi}: A vector of length \code{length(tcentral)} containing the values of the
+#' maximum scale from which there are border effects for the windowed scalograms.
 #'
 #' \code{rdist}: The log-scale radius for the windows measured in suboctaves.
 #'
-#' \code{signif95}: A logical matrix of size \code{length(tcentral)}x\code{length(scales)}. If TRUE,
-#'   the corresponding point of the \code{wsd} matrix is in the 95\% significance.
+#' \code{signif95}: A logical matrix of size
+#' \code{length(tcentral)}x\code{length(scales)}. If TRUE, the corresponding point of the
+#' \code{wsd} matrix is in the 95\% significance.
 #'
-#' \code{signif05}: A logical matrix of size \code{length(tcentral)}x\code{length(scales)}. If TRUE,
-#'   the corresponding point of the \code{wsd} matrix is in the 5\% significance.
+#' \code{signif05}: A logical matrix of size
+#' \code{length(tcentral)}x\code{length(scales)}. If TRUE, the corresponding point of the
+#' \code{wsd} matrix is in the 5\% significance.
 #'
 #' @examples
 #'
@@ -90,8 +122,8 @@
 #' C. Torrence, G. P. Compo. A practical guide to wavelet analysis. B. Am. Meteorol. Soc.
 #' 79 (1998), 61–78.
 #'
-#' V. J. Bolós, R. Benítez, R. Ferrer, R. Jammazi. The windowed scalogram difference: a novel wavelet tool for comparing time series.
-#' Appl. Math. Comput., 312 (2017), 49-65.
+#' V. J. Bolós, R. Benítez, R. Ferrer, R. Jammazi. The windowed scalogram difference: a
+#' novel wavelet tool for comparing time series. Appl. Math. Comput., 312 (2017), 49-65.
 #'
 #' @export
 #'
@@ -115,7 +147,7 @@ wsd <-
            parallel = FALSE,
            makefigure = TRUE) {
 
-    require(abind)
+  #  require(abind)
 
     wname <- toupper(wname)
     wname <- match.arg(wname)
@@ -258,7 +290,7 @@ wsd <-
       rndSignals <- array(c(rndSignals1, rndSignals2), dim = c(mc_nrand, nt, 2))
 
       if(parallel) {
-        require(parallel)
+      #  require(parallel)
         no_cores <- detectCores() - 1
 
         # Initiate cluster

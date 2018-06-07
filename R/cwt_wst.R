@@ -1,16 +1,20 @@
 #' @title Continuous wavelet transform
 #'
 #' @description
-#' This function computes the continuous wavelet transform for some families of wavelet bases:
-#' "MORLET", "DOG", "PAUL" and "HAAR".
-#' It is a translation from the Matlab(R) function published by Torrence
-#' and Compo (Torrence & Compo, 1998).
+#' This function computes the continuous wavelet transform for some families of wavelet
+#' bases: "MORLET", "DOG", "PAUL" and "HAAR".
+#' It is a translation from the Matlab(R) function published by Torrence and Compo
+#' (Torrence & Compo, 1998).
 #'
 #'
-#' @usage cwt_wst(scales, signal, wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam)
+#' @usage cwt_wst(scales,
+#'                signal,
+#'                wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+#'                wparam = NULL)
 #' @param scales A vector with the wavelet scales.
 #' @param signal A vector containing the sigal whose wavelet transform is wanted.
-#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
+#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+#' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
 #' @param wparam The corresponding nondimensional parameter for the wavelet function.
 #'
 #' @return A matrix of size length(signal) x length(scales),
@@ -69,7 +73,7 @@ cwt_wst <-
         j <- c(1, 1)
       }
       f <- rev(psi_integ[j])
-      coefs[, k] <- -sqrt(a) * core(diff(convolve(signal, f, type = "open")), nt)
+      coefs[, k] <- -sqrt(a) * core(diff(stats::convolve(signal, f, type = "open")), nt)
     }
 
   } else if (wname == "HAAR2") {
@@ -109,12 +113,12 @@ cwt_wst <-
   } else {
 
     coefs <- coefs + 1i*coefs
-    f <- fft(signal)
+    f <- stats::fft(signal)
     k <- 1:trunc(nt / 2)
     k <- k * 2 * pi / nt
     k <- c(0, k, -k[trunc((nt - 1) / 2):1])
     wav2 <- wave_bases(wname = wname, k = k, scales = scales, wparam = wparam)
-    coefs <- mvfft(t(sweep(wav2, MARGIN = 2, f, `*`)), inverse = TRUE) / length(f)
+    coefs <- stats::mvfft(t(sweep(wav2, MARGIN = 2, f, `*`)), inverse = TRUE) / length(f)
   }
 
   return(coefs)
@@ -126,7 +130,10 @@ cwt_wst <-
 #' This function is an internal function which extracts from a vector \code{x},
 #' the center of the vector of length \code{n}. It emulates the Matlab(R) function \code{wkeep}.
 #' This function is used by the cwt_wst function when the HAAR wavelet is selected.
+#' @usage core(x,n)
 #'
+#' @param x bla bla
+#' @param n bla bla bla
 
 
 core <- function(x, n) {

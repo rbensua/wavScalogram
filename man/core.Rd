@@ -4,7 +4,12 @@
 \alias{core}
 \title{Extracts the center of a vector}
 \usage{
-core(x, n)
+core(x,n)
+}
+\arguments{
+\item{x}{bla bla}
+
+\item{n}{bla bla bla}
 }
 \description{
 This function is an internal function which extracts from a vector \code{x},

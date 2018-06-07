@@ -3,15 +3,23 @@
 #' @description
 #' This function computes an approximation of the effective radius of a mother wavelet.
 #'
-#' @usage wavelet_radius(wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam, perc, scale, n, makefigure)
+#' @usage wavelet_radius(wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+#'                       wparam = NULL,
+#'                       perc = .0025,
+#'                       scale = 100,
+#'                       n = 1000,
+#'                       makefigure = FALSE)
 #'
-#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
+#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+#' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
 #' @param wparam Numeric. Parameters of the corresponding wavelet.
-#' @param perc Numeric. The wavelet radius is computed so that the area covered is at least the
-#'   100*(1-\code{perc})\% of the total area of the mother wavelet.
-#' @param scale Numeric. Scale of the wavelet used in the computations. It only affects the accuracy.
+#' @param perc Numeric. The wavelet radius is computed so that the area covered is at
+#' least the 100*(1-\code{perc})\% of the total area of the mother wavelet.
+#' @param scale Numeric. Scale of the wavelet used in the computations. It only affects
+#' the accuracy.
 #' @param n Numeric. The computations use a time series of length \eqn{2n+1}.
-#' @param makefigure Logical. Plots a figure with the real part of the mother wavelet and its modulus.
+#' @param makefigure Logical. Plots a figure with the real part of the mother wavelet and
+#' its modulus.
 #'
 #' @return A list with the following fields:
 #'

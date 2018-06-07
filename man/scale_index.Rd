@@ -4,30 +4,45 @@
 \alias{scale_index}
 \title{Scale index of a signal}
 \usage{
-scale_index(signal, scales, powerscales, s1, wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam, border_effects = c("BE", "INNER", "PER", "SYM"), makefigure)
+scale_index(signal,
+                   scales = NULL,
+                   powerscales = TRUE,
+                   s1 = NULL,
+                   wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+                   wparam = NULL,
+                   border_effects = c("BE", "INNER", "PER", "SYM"),
+                   makefigure = FALSE)
 }
 \arguments{
-\item{signal}{A vector containing the signal whose scale indices are wanted. The unit of time is taken as the time difference between two consecutive data.}
+\item{signal}{A vector containing the signal whose scale indices are wanted. The unit
+of time is taken as the time difference between two consecutive data.}
 
-\item{scales}{A vector containing the wavelet scales measured in units of time. This can be either a vector with all the scales, or (if \code{powerscales = TRUE})
-following Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum scale and the number of suboctaves per octave.}
+\item{scales}{A vector containing the wavelet scales measured in units of time. This
+can be either a vector with all the scales, or (if \code{powerscales = TRUE}) following
+Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum
+scale and the number of suboctaves per octave.}
 
 \item{powerscales}{Logical. Construct power 2 scales.}
 
-\item{s1}{A vector containing the scales \eqn{s_1}. The scale indices are computed in the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale.}
+\item{s1}{A vector containing the scales \eqn{s_1}. The scale indices are computed in
+the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale.}
 
-\item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
+\item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
 \item{wparam}{Numeric. Parameters of the corresponding wavelet.}
 
-\item{border_effects}{A string, equal to "BE", "INNER", "PER" or "SYM", which indicates how to manage the border effects
-  which arise usually when a convolution is performed on finite-lenght signals.
+\item{border_effects}{A string, equal to "BE", "INNER", "PER" or "SYM", which indicates
+how to manage the border effects which arise usually when a convolution is performed on
+finite-lenght signals.
 \itemize{
 \item "BE": With border effects, padding time series with zeroes.
-\item "INNER": Normalized inner scalogram with security margin adapted for each different scale.
+\item "INNER": Normalized inner scalogram with security margin adapted for each
+different scale.
 \item "PER": With border effects, using boundary wavelets (periodization of the
 original time series).
-\item "SYM": With border effects, using a symmetric catenation of the original time series.
+\item "SYM": With border effects, using a symmetric catenation of the original time
+series.
 }}
 
 \item{makefigure}{Logical. Plots a figure with the scale indices.}
@@ -42,19 +57,22 @@ A list with the following fields:
 \code{smin}: A vector with the scales \eqn{s_{min}}.
 }
 \description{
-This function computes the scale index of a signal in the scale interval \eqn{[s_0,s_1]},
-for a given set of scale parameters \eqn{s_1} and taking \eqn{s_0} as the minimum scale (see Benítez et al. 2010).
+This function computes the scale index of a signal in the scale interval
+\eqn{[s_0,s_1]}, for a given set of scale parameters \eqn{s_1} and taking \eqn{s_0} as
+the minimum scale (see Benítez et al. 2010).
 
-The scale index of a signal in the scale interval \eqn{[s_0,s_1]} is given
-by the quotient \deqn{\frac{S(s_{min})}{S(s_{max})},}{S(s_{min})/S(s_{max})} where \eqn{S} is the scalogram, \eqn{s_{max} in [s_0,s_1]} is the
-smallest scale such that \eqn{S(s)\le S(s_{max})} for all \eqn{s in [s_0,s_1]}, and \eqn{s_{min} in [s_{max},2s_1]}
-is the smallest scale such that \eqn{S(s_{min})\le S(s)} for all \eqn{s in [s_{max},2s_1]}.
+The scale index of a signal in the scale interval \eqn{[s_0,s_1]} is given by the
+quotient \deqn{\frac{S(s_{min})}{S(s_{max})},}{S(s_{min})/S(s_{max})} where \eqn{S} is
+the scalogram, \eqn{s_{max} in [s_0,s_1]} is the smallest scale such that
+\eqn{S(s)\le S(s_{max})} for all \eqn{s in [s_0,s_1]}, and
+\eqn{s_{min} in [s_{max},2s_1]} is the smallest scale such that
+\eqn{S(s_{min})\le S(s)} for all \eqn{s in [s_{max},2s_1]}.
 }
 \section{References}{
 
 
-R. Benítez, V. J. Bolós, M. E. Ramírez. A wavelet-based tool for studying non-periodicity.
-Comput. Math. Appl. 60 (2010), no. 3, 634-641.
+R. Benítez, V. J. Bolós, M. E. Ramírez. A wavelet-based tool for studying
+non-periodicity. Comput. Math. Appl. 60 (2010), no. 3, 634-641.
 }
 
 \examples{

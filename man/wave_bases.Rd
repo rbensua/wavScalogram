@@ -4,7 +4,10 @@
 \alias{wave_bases}
 \title{Daughter wavelets}
 \usage{
-wave_bases(wname = c("MORLET", "PAUL", "DOG"), k, scale, wparam)
+wave_bases(wname = c("MORLET", "PAUL", "DOG"),
+                  k,
+                  scales,
+                  wparam = NULL)
 }
 \arguments{
 \item{wname}{A string, equal to "MORLET", "PAUL" or "DOG".}
@@ -21,9 +24,9 @@ containing the fourier transform of the daughter wavelets for the mother "wname"
 for the given scales (one row for each scale).
 }
 \description{
-This function computes the daughter wavelets for three different families: "MORLET", "DOG" and "PAUL"
-(Derivatives of the Gaussian). It is a translation from the Matlab(R) function published by Torrence
-and Compo following (Torrence & Compo, 1998).
+This function computes the daughter wavelets for three different families: "MORLET",
+"DOG" and "PAUL" (Derivatives of the Gaussian). It is a translation from the Matlab(R)
+function published by Torrence and Compo following (Torrence & Compo, 1998).
 
 This is an internal function used for the computation of the wavelet continuous
 transform with the \code{cwt_wst} function
@@ -38,7 +41,8 @@ C. Torrence, G. P. Compo. A practical guide to wavelet analysis. B. Am. Meteorol
 k <- (1:2000)*2/pi/100
 scales <- c(1,2)
 daughter <- wave_bases(wname = "MORLET", k = k, scale = scales)
-plot(k, daughter[2,], type = "l", xlab = "", ylab = "", main = "Morlet daughter wavelets")
+plot(k, daughter[2,], type = "l", xlab = "", ylab = "", main = "Morlet daughter
+     wavelets")
 lines(k,daughter[1,], col = "red")
 legend("topright", legend = c("s = 1", "s = 2"), lty = 1, col = c("red", "black"))
 

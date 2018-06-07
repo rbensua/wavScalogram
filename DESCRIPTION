@@ -1,6 +1,6 @@
 Package: wavScalogram
 Type: Package
-Title: Wavelet Scalogram Tools for Time Series Analysis.
+Title: Wavelet Scalogram Tools for Time Series Analysis
 Version: 0.1.0
 Author: Vicente J. Bolos and Rafael Benitez
 Maintainer: Vicente J. Bolos <vbolos@uv.es>
@@ -10,10 +10,9 @@ Imports:
     abind,
     colorRamps,
     fields,
-    ggplot2,
-    dplyr,
-    reshape,
-    scales
+    Matrix,
+    parallel,
+    zoo
 License: GPL
 Encoding: UTF-8
 LazyData: true

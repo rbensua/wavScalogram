@@ -4,21 +4,29 @@
 \alias{wavelet_radius}
 \title{Wavelet radius}
 \usage{
-wavelet_radius(wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam, perc, scale, n, makefigure)
+wavelet_radius(wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+                      wparam = NULL,
+                      perc = .0025,
+                      scale = 100,
+                      n = 1000,
+                      makefigure = FALSE)
 }
 \arguments{
-\item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
+\item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
 \item{wparam}{Numeric. Parameters of the corresponding wavelet.}
 
-\item{perc}{Numeric. The wavelet radius is computed so that the area covered is at least the
-100*(1-\code{perc})\% of the total area of the mother wavelet.}
+\item{perc}{Numeric. The wavelet radius is computed so that the area covered is at
+least the 100*(1-\code{perc})\% of the total area of the mother wavelet.}
 
-\item{scale}{Numeric. Scale of the wavelet used in the computations. It only affects the accuracy.}
+\item{scale}{Numeric. Scale of the wavelet used in the computations. It only affects
+the accuracy.}
 
 \item{n}{Numeric. The computations use a time series of length \eqn{2n+1}.}
 
-\item{makefigure}{Logical. Plots a figure with the real part of the mother wavelet and its modulus.}
+\item{makefigure}{Logical. Plots a figure with the real part of the mother wavelet and
+its modulus.}
 }
 \value{
 A list with the following fields:

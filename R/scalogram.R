@@ -2,28 +2,41 @@
 #'
 #' @description This function computes the normalized scalogram of a signal for the scales
 #' given. It is important to note that the notion of scalogram here is analogous
-#' to the spectrum of the Fourier transform. It gives the contribution of each scale to the total energy
-#' of the signal. For each scale \eqn{s}, it is defined as the square root of the
-#' integral of the squared modulus of the wavelet transform w.r.t the time variable \eqn{t}, i.e.
+#' to the spectrum of the Fourier transform. It gives the contribution of each scale to
+#' the total energy of the signal. For each scale \eqn{s}, it is defined as the square
+#' root of the integral of the squared modulus of the wavelet transform w.r.t the time
+#' variable \eqn{t}, i.e.
 #'
 #'   \deqn{S(s):= (\int_{-\infty}^{+\infty}|Wf(t,s)|^2 dt)^{1/2}.}{%
 #'   S(s):=(integral_{-\infty}^{+\infty}|Wf(t,s)|^2 dt)^{1/2}.}
 #'
-#' "Normalized" means that the scalogram is divided by the square root of the number of times, for comparison
-#' purposes between different values of the parameter \code{border_effects}.
+#' "Normalized" means that the scalogram is divided by the square root of the number of
+#' times, for comparison purposes between different values of the parameter
+#' \code{border_effects}.
 #'
 #'
-#' @usage scalogram(signal, scales, powerscales, wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"), wparam, border_effects = c("BE", "INNER", "PER", "SYM"), energy_density, makefigure)
+#' @usage scalogram(signal,
+#'                  scales = NULL,
+#'                  powerscales = TRUE,
+#'                  wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
+#'                  wparam = NULL,
+#'                  border_effects = c("BE", "INNER", "PER", "SYM"),
+#'                  energy_density = TRUE,
+#'                  makefigure = FALSE)
 #'
-#' @param signal A vector containing the signal whose wavelet transform is wanted. The unit of time is taken as the time difference between two consecutive data.
-#' @param scales A vector with the wavelet scales measured in units of time. This can be either a vector with all the scales, or (if \code{powerscales = TRUE})
-#'   following Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum scale and the number of suboctaves per octave.
+#' @param signal A vector containing the signal whose wavelet transform is wanted. The
+#' unit of time is taken as the time difference between two consecutive data.
+#' @param scales A vector with the wavelet scales measured in units of time. This can be
+#' either a vector with all the scales, or (if \code{powerscales = TRUE}) following
+#' Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum
+#' scale and the number of suboctaves per octave.
 #' @param powerscales Logical. Construct power 2 scales.
-#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
+#' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
+#' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
 #' @param wparam Numeric. Parameters of the corresponding wavelet.
 #' @param border_effects String, equal to "BE", "INNER", "PER" or "SYM",
-#' which indicates how to manage the border effects which arise usually when a convolution is
-#' performed on finite-lenght signals.
+#' which indicates how to manage the border effects which arise usually when a convolution
+#' is performed on finite-lenght signals.
 #' \itemize{
 #' \item "BE": With border effects, padding time series with zeroes.
 #' \item "INNER": Normalized inner scalogram with security margin adapted for each
@@ -39,7 +52,8 @@
 #'
 #' @return A list with the following fields:
 #'
-#' \code{scalog}: A vector of length \code{length(scales)}, containing the values of the scalogram at each scale.
+#' \code{scalog}: A vector of length \code{length(scales)}, containing the values of the
+#' scalogram at each scale.
 #'
 #' \code{scales}: The vector of scales.
 #'
@@ -53,8 +67,8 @@
 #' C. Torrence, G. P. Compo. A practical guide to wavelet analysis. B. Am. Meteorol. Soc.
 #' 79 (1998), 61–78.
 #'
-#' V. J. Bolós, R. Benítez, R. Ferrer, R. Jammazi. The windowed scalogram difference: a novel wavelet tool for comparing time series.
-#' Appl. Math. Comput., 312 (2017), 49-65.
+#' V. J. Bolós, R. Benítez, R. Ferrer, R. Jammazi. The windowed scalogram difference: a
+#' novel wavelet tool for comparing time series. Appl. Math. Comput., 312 (2017), 49-65.
 #'
 #' @export
 #'

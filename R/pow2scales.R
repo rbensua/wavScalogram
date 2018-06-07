@@ -1,12 +1,13 @@
 #' @title Power 2 scales
 #'
-#' @description This function constructs power 2 scales from a vector of three elements with the minimum scale,
-#'   the maximum scale and the number of suboctaves per octave (following Torrence and Compo 1998).
+#' @description This function constructs power 2 scales from a vector of three elements
+#' with the minimum scale, the maximum scale and the number of suboctaves per octave
+#' (following Torrence and Compo 1998).
 #'
 #' @usage pow2scales(scales)
 #'
-#' @param scales A vector of three elements with the minimum scale, the maximum scale and the number of
-#'   suboctaves per octave.
+#' @param scales A vector of three elements with the minimum scale, the maximum scale and
+#' the number of suboctaves per octave.
 #'
 #' @return A vector with all the scales.
 #'
