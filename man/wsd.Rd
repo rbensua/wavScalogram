@@ -6,13 +6,15 @@
 \usage{
 wsd(signal1,
            signal2,
+           dt = 1,
            scaleparam = NULL,
-           delta_t = NULL,
            windowrad = NULL,
            rdist = NULL,
+           delta_t = NULL,
            normalize = FALSE,
            wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
            wparam = NULL,
+           waverad = NULL,
            border_effects = c("BE", "INNER", "PER", "SYM"),
            mc_nrand = 0,
            commutative = TRUE,
@@ -20,7 +22,9 @@ wsd(signal1,
            compensation = 0,
            energy_density = TRUE,
            parallel = FALSE,
-           makefigure = TRUE)
+           makefigure = TRUE,
+           time_values = NULL,
+           figureperiod = TRUE)
 }
 \arguments{
 \item{signal1}{A vector containing the first signal.}
@@ -28,23 +32,33 @@ wsd(signal1,
 \item{signal2}{A vector containing the second signal (its length should be equal to
 that of \code{signal1}).}
 
+\item{dt}{Numeric. The time step of the signals.}
+
 \item{scaleparam}{A vector of three elements with the minimum scale, the maximum scale
 and the number of suboctaves per octave for constructing power 2 scales (following
-Torrence and Compo 1998), measured in units of time.}
+Torrence and Compo 1998). If NULL, they are automatically computed.}
 
-\item{delta_t}{Numeric. Increment of time for the construction of windows central
-times.}
+\item{windowrad}{Integer. Time radius for the windows, measured in \code{dt}. By
+default, it is set to \eqn{celing(length(signal1) / 20)}.}
 
-\item{windowrad}{Numeric. Time radius for the windows.}
+\item{rdist}{Integer. Log-scale radius for the windows measured in suboctaves. By
+default, it is set to \eqn{ceiling(length(scales) / 20)}.}
 
-\item{rdist}{Numeric. Log-scale radius for the windows measured in suboctaves.}
+\item{delta_t}{Integer. Increment of time for the construction of windows central
+times, measured in \code{dt}. By default, it is set to
+\eqn{ceiling(length(signal1) / 256)}.}
 
 \item{normalize}{Logical. Set to TRUE if the signals use different units.}
 
 \item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
-\item{wparam}{Numeric. Parameters of the corresponding wavelet.}
+\item{wparam}{The corresponding nondimensional parameter for the wavelet function
+(Morlet, DoG or Paul).}
+
+\item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
+of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
+and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
 
 \item{border_effects}{String, equal to "BE", "INNER", "PER" or "SYM",
 which indicates how to manage the border effects which arise usually when a convolution
@@ -88,39 +102,45 @@ even divisions by zero.
 preventing numerical errors or non-relevant high relative differences when scalogram
 values are close to zero (see Bolós et al. 2017).}
 
-\item{energy_density}{Logical. Divide the scalograms by \eqn{\sqrt(scales)} for convert
-them into energy density (defaults to TRUE). Note that it does not affect the results
-if \code{wscnoise} \eqn{= 0}.}
+\item{energy_density}{Logical. If TRUE (default), divide the scalograms by the square
+root of the scales for convert them into energy density. Note that it does not affect
+the results if \code{wscnoise} \eqn{= 0}.}
 
 \item{parallel}{Logical. If TRUE (default) uses function \code{parApply} from package
-\code{parallel} for the Montecarlo simulations. When FALSE is uses the normal
+\code{parallel} for the Montecarlo simulations. When FALSE it uses the normal
 \code{apply} function.}
 
-\item{makefigure}{Logical. Plots a figure with the WSD.}
+\item{makefigure}{Logical. If TRUE (default), a figure with the WSD is plotted.}
+
+\item{time_values}{A numerical vector of length \code{length(signal)} containing custom
+time values for the figure. If NULL (default), it will be computed starting at 0.}
+
+\item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
+of scales.}
 }
 \value{
 A list with the following fields:
-
-\code{wsd}: A matrix of size \code{length(tcentral)}x\code{length(scales)} containing
-the values of the windowed scalogram differences at each scale and at each time window.
-
-\code{t}: The vector of central times used in the computations of the windowed
-scalograms.
-
-\code{scales}: The vector of scales used in the computations.
-
-\code{coi}: A vector of length \code{length(tcentral)} containing the values of the
-maximum scale from which there are border effects for the windowed scalograms.
-
-\code{rdist}: The log-scale radius for the windows measured in suboctaves.
-
-\code{signif95}: A logical matrix of size
-\code{length(tcentral)}x\code{length(scales)}. If TRUE, the corresponding point of the
-\code{wsd} matrix is in the 95\% significance.
-
-\code{signif05}: A logical matrix of size
-\code{length(tcentral)}x\code{length(scales)}. If TRUE, the corresponding point of the
-\code{wsd} matrix is in the 5\% significance.
+\itemize{
+\item \code{wsd}: A matrix of size \code{length(tcentral)} x \code{length(scales)}
+containing the values of the windowed scalogram differences at each scale and at each
+time window.
+\item \code{tcentral}: The vector of central times used in the computations of the
+windowed scalograms.
+\item \code{scales}: The vector of scales.
+\item \code{windowrad}: Radius for the time windows of the windowed scalograms,
+measured in \code{dt}.
+\item \code{rdist}: The log-scale radius for the windows measured in suboctaves.
+\item \code{signif95}: A logical matrix of size \code{length(tcentral)} x
+\code{length(scales)}. If TRUE, the corresponding point of the \code{wsd} matrix is in
+the 95\% significance.
+\item \code{signif05}: A logical matrix of size \code{length(tcentral)} x
+\code{length(scales)}. If TRUE, the corresponding point of the \code{wsd} matrix is in
+the 5\% significance.
+\item \code{fourier_factor}: A factor for converting scales to periods.
+\item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
+values of the maximum scale from which there are border effects for the respective
+central time.
+}
 }
 \description{
 This function computes the Windowed Scalogram Difference of two signals.
@@ -139,7 +159,7 @@ novel wavelet tool for comparing time series. Appl. Math. Comput., 312 (2017), 4
 
 nt <- 1500
 time <- 1:nt
-sd_noise <-  0.2 #\% In Bolós et al. 2017 Figure 1, sd_noise = 1.
+sd_noise <-  0.2 #\% In BolÃ³s et al. 2017 Figure 1, sd_noise = 1.
 signal1 <- rnorm(n = nt, mean = 0, sd = sd_noise) + sin(time / 10)
 signal2 <- rnorm(n = nt, mean = 0, sd = sd_noise) + sin(time / 10)
 signal2[500:1000] = signal2[500:1000] + sin((500:1000) / 2)

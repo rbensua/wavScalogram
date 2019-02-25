@@ -5,6 +5,7 @@
 \title{Windowed scale index}
 \usage{
 windowed_scale_index(signal,
+                            dt = 1,
                             scales = NULL,
                             powerscales = TRUE,
                             s1 = NULL,
@@ -12,32 +13,46 @@ windowed_scale_index(signal,
                             delta_t = NULL,
                             wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
                             wparam = NULL,
+                            waverad = NULL,
                             border_effects = c("BE", "INNER", "PER", "SYM"),
-                            makefigure = FALSE)
+                            makefigure = TRUE,
+                            time_values = NULL,
+                            figureperiod = TRUE)
 }
 \arguments{
-\item{signal}{A vector containing the signal whose windowed scale indices are wanted.
-The unit of time is taken as the time difference between two consecutive data.}
+\item{signal}{A vector containing the signal whose windowed scale indices are wanted.}
 
-\item{scales}{A vector containing the wavelet scales measured in units of time. This
-can be either a vector with all the scales, or (if \code{powerscales = TRUE})
-following Torrence and Compo 1998, a vector of three elements with the minimum scale,
-the maximum scale and the number of suboctaves per octave.}
+\item{dt}{Numeric. The time step of the signal.}
 
-\item{powerscales}{Logical. Construct power 2 scales.}
+\item{scales}{A vector containing the wavelet scales at wich the windowed scalograms
+are computed. This can be either a vector with all the scales, or (if
+\code{powerscales} is TRUE) following Torrence and Compo 1998, a vector of three
+elements with the minimum scale, the maximum scale and the number of suboctaves per
+octave. If NULL, they are automatically computed.}
+
+\item{powerscales}{Logical. If TRUE (default), construct power 2 scales from
+\code{scales}. If \code{scales} is NULL, they are automatically computed.}
 
 \item{s1}{A vector containing the scales \eqn{s_1}. The windowed scale indices are
-computed in the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale.}
+computed in the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale in
+\code{scales}.}
 
-\item{windowrad}{Numeric. Radius for the time windows.}
+\item{windowrad}{Integer. Time radius for the windows, measured in \code{dt}. By
+default, it is set to \eqn{celing(length(signal1) / 20)}.}
 
-\item{delta_t}{Numeric. Increment of time for the construction of windows central
-times.}
+\item{delta_t}{Integer. Increment of time for the construction of windows central
+times, measured in \code{dt}. By default, it is set to
+\eqn{celing(length(signal) / 256)}.}
 
 \item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
-\item{wparam}{Numeric. Parameters of the corresponding wavelet.}
+\item{wparam}{The corresponding nondimensional parameter for the wavelet function
+(Morlet, DoG or Paul).}
+
+\item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
+of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
+and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
 
 \item{border_effects}{A string, equal to "BE", "INNER", "PER" or "SYM", which indicates
 how to manage the border effects which arise usually when a convolution is performed on
@@ -52,26 +67,35 @@ original time series).
 series.
 }}
 
-\item{makefigure}{Logical. Plots a figure with the windowed scale indices.}
+\item{makefigure}{Logical. If TRUE (default), a figure with the windowed scale indices
+is plotted.}
+
+\item{time_values}{A numerical vector of length \code{length(signal)} containing custom
+time values for the figure. If NULL (default), it will be computed starting at 0.}
+
+\item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
+of scales.}
 }
 \value{
 A list with the following fields:
-
-\code{wsi}: A matrix of size \code{length(tcentral)}x\code{length(s1)} containing
-the values of the corresponding windowed scale indices.
-
-\code{smax}: A vector of length \code{length(tcentral)} containing the scales
-\eqn{s_{max}}.
-
-\code{smin}: A vector of length \code{length(tcentral)} containing the scales
-\eqn{s_{min}}.
-
-\code{tcentral}: The vector of central times used in the computation of the \code{wsi}.
-
-\code{s1}: The vector of scales \eqn{s_1}.
-
-\code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the values
-of the maximum scale from which there are border effects.
+\itemize{
+\item \code{wsi}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+containing the values of the corresponding windowed scale indices.
+\item \code{s1}: The vector of scales \eqn{s_1}.
+\item \code{smax}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+containing the scales \eqn{s_{max}}.
+\item \code{smin}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+containing the scales \eqn{s_{min}}.
+\item \code{scalog_smax}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+containing the values of the corresponding scalograms at scales \eqn{s_{max}}.
+\item \code{scalog_smin}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+containing the values of the corresponding scalograms at scales \eqn{s_{min}}.
+\item \code{tcentral}: The vector of central times used in the computation of
+\code{wsi}.
+\item \code{fourier_factor}: A factor for converting scales to periods.
+\item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
+values of the maximum scale from which there are border effects.
+}
 }
 \description{
 This function computes the windowed scale indices of a signal in the scale
@@ -97,8 +121,9 @@ non-periodicity. Comput. Math. Appl. 60 (2010), no. 3, 634-641.
 }
 
 \examples{
-time <- 1:500
-signal <- c(sin(pi * time / 8), sin(pi * time / 16))
-wsi <- windowed_scale_index(signal = signal, makefigure = TRUE)
+dt <- 0.1
+time <- seq(0, 50, dt)
+signal <- c(sin(pi * time), sin(pi * time / 2))
+wsi <- windowed_scale_index(signal = signal, dt = dt)
 
 }

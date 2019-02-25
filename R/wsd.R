@@ -5,13 +5,15 @@
 #'
 #' @usage wsd(signal1,
 #'            signal2,
+#'            dt = 1,
 #'            scaleparam = NULL,
-#'            delta_t = NULL,
 #'            windowrad = NULL,
 #'            rdist = NULL,
+#'            delta_t = NULL,
 #'            normalize = FALSE,
 #'            wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
 #'            wparam = NULL,
+#'            waverad = NULL,
 #'            border_effects = c("BE", "INNER", "PER", "SYM"),
 #'            mc_nrand = 0,
 #'            commutative = TRUE,
@@ -19,22 +21,32 @@
 #'            compensation = 0,
 #'            energy_density = TRUE,
 #'            parallel = FALSE,
-#'            makefigure = TRUE)
+#'            makefigure = TRUE,
+#'            time_values = NULL,
+#'            figureperiod = TRUE)
 #'
 #' @param signal1 A vector containing the first signal.
 #' @param signal2 A vector containing the second signal (its length should be equal to
 #' that of \code{signal1}).
+#' @param dt Numeric. The time step of the signals.
 #' @param scaleparam A vector of three elements with the minimum scale, the maximum scale
 #' and the number of suboctaves per octave for constructing power 2 scales (following
-#' Torrence and Compo 1998), measured in units of time.
-#' @param delta_t Numeric. Increment of time for the construction of windows central
-#' times.
-#' @param windowrad Numeric. Time radius for the windows.
-#' @param rdist Numeric. Log-scale radius for the windows measured in suboctaves.
+#' Torrence and Compo 1998). If NULL, they are automatically computed.
+#' @param windowrad Integer. Time radius for the windows, measured in \code{dt}. By
+#' default, it is set to \eqn{celing(length(signal1) / 20)}.
+#' @param rdist Integer. Log-scale radius for the windows measured in suboctaves. By
+#' default, it is set to \eqn{ceiling(length(scales) / 20)}.
+#' @param delta_t Integer. Increment of time for the construction of windows central
+#' times, measured in \code{dt}. By default, it is set to
+#' \eqn{ceiling(length(signal1) / 256)}.
 #' @param normalize Logical. Set to TRUE if the signals use different units.
 #' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 #' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
-#' @param wparam Numeric. Parameters of the corresponding wavelet.
+#' @param wparam The corresponding nondimensional parameter for the wavelet function
+#' (Morlet, DoG or Paul).
+#' @param waverad Numeric. The radius of the wavelet used in the computations for the cone
+#' of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
+#' and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.
 #' @param border_effects String, equal to "BE", "INNER", "PER" or "SYM",
 #' which indicates how to manage the border effects which arise usually when a convolution
 #' is performed on finite-lenght signals.
@@ -72,39 +84,43 @@
 #' @param compensation Numeric in \eqn{[0,1]}. It is an alternative to \code{wscnoise} for
 #' preventing numerical errors or non-relevant high relative differences when scalogram
 #' values are close to zero (see Bolós et al. 2017).
-#' @param energy_density Logical. Divide the scalograms by \eqn{\sqrt(scales)} for convert
-#' them into energy density (defaults to TRUE). Note that it does not affect the results
-#' if \code{wscnoise} \eqn{= 0}.
+#' @param energy_density Logical. If TRUE (default), divide the scalograms by the square
+#' root of the scales for convert them into energy density. Note that it does not affect
+#' the results if \code{wscnoise} \eqn{= 0}.
 #' @param parallel Logical. If TRUE (default) uses function \code{parApply} from package
-#' \code{parallel} for the Montecarlo simulations. When FALSE is uses the normal
+#' \code{parallel} for the Montecarlo simulations. When FALSE it uses the normal
 #' \code{apply} function.
-#' @param makefigure Logical. Plots a figure with the WSD.
+#' @param makefigure Logical. If TRUE (default), a figure with the WSD is plotted.
+#' @param time_values A numerical vector of length \code{length(signal)} containing custom
+#' time values for the figure. If NULL (default), it will be computed starting at 0.
+#' @param figureperiod Logical. If TRUE (default), periods are used in the figure instead
+#' of scales.
 #'
 #' @importFrom parallel parApply detectCores makeCluster stopCluster
 #' @importFrom abind abind
 #'
 #' @return A list with the following fields:
-#'
-#' \code{wsd}: A matrix of size \code{length(tcentral)}x\code{length(scales)} containing
-#' the values of the windowed scalogram differences at each scale and at each time window.
-#'
-#' \code{t}: The vector of central times used in the computations of the windowed
-#' scalograms.
-#'
-#' \code{scales}: The vector of scales used in the computations.
-#'
-#' \code{coi}: A vector of length \code{length(tcentral)} containing the values of the
-#' maximum scale from which there are border effects for the windowed scalograms.
-#'
-#' \code{rdist}: The log-scale radius for the windows measured in suboctaves.
-#'
-#' \code{signif95}: A logical matrix of size
-#' \code{length(tcentral)}x\code{length(scales)}. If TRUE, the corresponding point of the
-#' \code{wsd} matrix is in the 95\% significance.
-#'
-#' \code{signif05}: A logical matrix of size
-#' \code{length(tcentral)}x\code{length(scales)}. If TRUE, the corresponding point of the
-#' \code{wsd} matrix is in the 5\% significance.
+#' \itemize{
+#' \item \code{wsd}: A matrix of size \code{length(tcentral)} x \code{length(scales)}
+#' containing the values of the windowed scalogram differences at each scale and at each
+#' time window.
+#' \item \code{tcentral}: The vector of central times used in the computations of the
+#' windowed scalograms.
+#' \item \code{scales}: The vector of scales.
+#' \item \code{windowrad}: Radius for the time windows of the windowed scalograms,
+#' measured in \code{dt}.
+#' \item \code{rdist}: The log-scale radius for the windows measured in suboctaves.
+#' \item \code{signif95}: A logical matrix of size \code{length(tcentral)} x
+#' \code{length(scales)}. If TRUE, the corresponding point of the \code{wsd} matrix is in
+#' the 95\% significance.
+#' \item \code{signif05}: A logical matrix of size \code{length(tcentral)} x
+#' \code{length(scales)}. If TRUE, the corresponding point of the \code{wsd} matrix is in
+#' the 5\% significance.
+#' \item \code{fourier_factor}: A factor for converting scales to periods.
+#' \item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
+#' values of the maximum scale from which there are border effects for the respective
+#' central time.
+#' }
 #'
 #' @examples
 #'
@@ -131,13 +147,15 @@
 wsd <-
   function(signal1,
            signal2,
+           dt = 1,
            scaleparam = NULL,
-           delta_t = NULL,
            windowrad = NULL,
            rdist = NULL,
+           delta_t = NULL,
            normalize = FALSE,
            wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
            wparam = NULL,
+           waverad = NULL,
            border_effects = c("BE", "INNER", "PER", "SYM"),
            mc_nrand = 0,
            commutative = TRUE,
@@ -145,19 +163,24 @@ wsd <-
            compensation = 0,
            energy_density = TRUE,
            parallel = FALSE,
-           makefigure = TRUE) {
+           makefigure = TRUE,
+           time_values = NULL,
+           figureperiod = TRUE) {
 
   #  require(abind)
 
     wname <- toupper(wname)
     wname <- match.arg(wname)
-    if (wname == "MORLET") {
-      waverad <- 3
-    } else if ((wname == "HAAR") || (wname == "HAAR2")) {
-      waverad <- 0.5
-    } else {
-      waverad <- wavelet_radius(wname = wname, wparam = wparam)
-      waverad <- waverad$left
+
+    if (is.null(waverad)) {
+      if (wname == "MORLET") {
+        waverad <- 3
+      } else if ((wname == "HAAR") || (wname == "HAAR2")) {
+        waverad <- 0.5
+      } else {
+        waverad <- wavelet_radius(wname = wname, wparam = wparam)
+        waverad <- waverad$left
+      }
     }
 
     border_effects <- toupper(border_effects)
@@ -181,10 +204,11 @@ wsd <-
 
     if (is.null(scaleparam)) {
       scmax <- floor((nt - 2 * windowrad) / (2 * waverad))
-      scaleparam <- c(2, scmax, ceiling(256 / (log2(scmax) - 1)))
+      scaleparam <- c(2 * dt, scmax * dt, ceiling(256 / (log2(scmax) - 1)))
     }
 
-    scales <- pow2scales(scaleparam)
+    scalesdt <- pow2scales(scaleparam)
+    scales <- scalesdt / dt
     ns <- length(scales)
 
     if (is.null(rdist)) {
@@ -194,40 +218,42 @@ wsd <-
     ### Scalograms
 
     scalog1 <-
-      scalogram(signal = signal1,
-                scales = scales, powerscales = FALSE,
+      scalogram(signal = signal1, dt = dt,
+                scales = scalesdt, powerscales = FALSE,
                 border_effects = border_effects,
                 energy_density = energy_density,
-                wname = wname, wparam = wparam)
+                wname = wname, wparam = wparam, waverad = waverad,
+                makefigure = FALSE)
     scalog2 <-
-      scalogram(signal = signal2,
-                scales = scales, powerscales = FALSE,
+      scalogram(signal = signal2, dt = dt,
+                scales = scalesdt, powerscales = FALSE,
                 border_effects = border_effects,
                 energy_density = energy_density,
-                wname = wname, wparam = wparam)
+                wname = wname, wparam = wparam, waverad = waverad,
+                makefigure = FALSE)
 
     ### Windowed scalograms
 
     wsc1 <-
       windowed_scalogram(
-        signal = signal1,
-        scales = scales, powerscales = FALSE,
+        signal = signal1, dt = dt,
+        scales = scalesdt, powerscales = FALSE,
         border_effects = border_effects,
         energy_density = energy_density,
         windowrad = windowrad,
         delta_t = delta_t,
-        wname = wname, wparam = wparam
-      )
+        wname = wname, wparam = wparam, waverad = waverad,
+        makefigure = FALSE)
     wsc2 <-
       windowed_scalogram(
-        signal = signal2,
-        scales = scales, powerscales = FALSE,
+        signal = signal2, dt = dt,
+        scales = scalesdt, powerscales = FALSE,
         border_effects = border_effects,
         energy_density = energy_density,
         windowrad = windowrad,
         delta_t = delta_t,
-        wname = wname, wparam = wparam
-      )
+        wname = wname, wparam = wparam, waverad = waverad,
+        makefigure = FALSE)
 
     nwsc <- length(wsc1$tcentral)
 
@@ -304,21 +330,21 @@ wsd <-
               wsd(
                 signal1 = x[, 1],
                 signal2 = x[, 2],
+                dt = dt,
                 scaleparam = scaleparam,
                 delta_t = delta_t,
                 windowrad = windowrad,
                 rdist = rdist,
                 normalize = normalize,
-                wname = wname, wparam = wparam,
+                wname = wname, wparam = wparam, waverad = waverad,
                 border_effects = border_effects,
                 mc_nrand = 0,
                 commutative = commutative,
                 compensation = compensation,
                 wscnoise = wscnoise,
                 energy_density = energy_density,
-                makefigure = FALSE,
-                parallel = parallel
-              )
+                parallel = parallel,
+                makefigure = FALSE)
           }
         ) -> kk
       stopCluster(cl1)
@@ -333,21 +359,21 @@ wsd <-
               wsd(
                 signal1 = x[, 1],
                 signal2 = x[, 2],
+                dt = dt,
                 scaleparam = scaleparam,
                 delta_t = delta_t,
                 windowrad = windowrad,
                 rdist = rdist,
                 normalize = normalize,
-                wname = wname, wparam = wparam,
+                wname = wname, wparam = wparam, waverad = waverad,
                 border_effects = border_effects,
                 mc_nrand = 0,
                 commutative = commutative,
                 compensation = compensation,
                 wscnoise = wscnoise,
                 energy_density = energy_density,
-                makefigure = FALSE,
-                parallel = parallel
-              )
+                parallel = parallel,
+                makefigure = FALSE)
           }
         ) -> kk
       }
@@ -396,30 +422,58 @@ wsd <-
 
     ### Make figure
 
+    tcentraldt <- wsc1$tcentral
+    fourier_factor <- wsc1$fourier_factor
+
     if (makefigure) {
+
+      if (figureperiod) {
+        Y <- fourier_factor * scalesdt
+        coi <- fourier_factor * coi_wsc
+        Yname <- "Period"
+      } else {
+        Y <- scalesdt
+        coi <- coi_wsc
+        Yname <- "Scale"
+      }
+
+      if (is.null(time_values)) {
+        X <- tcentraldt
+      } else {
+        if (length(time_values) != nt) {
+          warning("Invalid length of time_values vector. Changing to default.")
+          X <- tcentraldt
+        } else {
+          X <- time_values[floor(tcentraldt / dt)]
+        }
+      }
+
       wavPlot(
         Z = -log2(wsd),
-        X = wsc1$tcentral,
-        Y = scales,
+        X = X,
+        Y = Y,
         Ylog = TRUE,
-        coi = coi_wsc,
+        coi = coi,
         rdist = rdist,
         sig95 = wsdsig95,
         sig05 = wsdsig05,
         Xname = "Time",
-        Yname = "Scale",
+        Yname = Yname,
         Zname = "-log2(WSD)"
       )
+
     }
 
     return(list(
       wsd = wsd,
-      t = wsc1$tcentral,
-      scales = scales,
-      coi = wsc1$coi_maxscale,
+      tcentral = tcentraldt,
+      scales = scalesdt,
+      windowrad = windowrad,
       rdist = rdist,
       signif95 = wsdsig95,
-      signif05 = wsdsig05
+      signif05 = wsdsig05,
+      fourier_factor = fourier_factor,
+      coi_maxscale = coi_wsc
     ))
 
   }

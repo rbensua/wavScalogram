@@ -7,9 +7,9 @@
 core(x,n)
 }
 \arguments{
-\item{x}{bla bla}
+\item{x}{A vector from wich the center is extracted.}
 
-\item{n}{bla bla bla}
+\item{n}{Numeric. The length of the center of \code{x}.}
 }
 \description{
 This function is an internal function which extracts from a vector \code{x},

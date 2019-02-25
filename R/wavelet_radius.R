@@ -12,7 +12,8 @@
 #'
 #' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 #' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
-#' @param wparam Numeric. Parameters of the corresponding wavelet.
+#' @param wparam The corresponding nondimensional parameter for the wavelet function
+#' (Morlet, DoG or Paul).
 #' @param perc Numeric. The wavelet radius is computed so that the area covered is at
 #' least the 100*(1-\code{perc})\% of the total area of the mother wavelet.
 #' @param scale Numeric. Scale of the wavelet used in the computations. It only affects
@@ -22,10 +23,10 @@
 #' its modulus.
 #'
 #' @return A list with the following fields:
-#'
-#' \code{left}: The radius on the left.
-#'
-#' \code{right}: The radius on the right.
+#' \itemize{
+#' \item \code{left}: The radius on the left.
+#' \item \code{right}: The radius on the right.
+#' }
 #'
 #' @examples
 #' waverad <- wavelet_radius(wname = "MORLET", makefigure = TRUE)
@@ -47,7 +48,14 @@ wavelet_radius <-
   signal <- c(numeric(n), 1, numeric(n))
   nt <- 2 * n + 1
 
-  coefs <- cwt_wst(scales = scale, signal = signal, wname = wname, wparam = wparam)
+  cwt <- cwt_wst(signal = signal,
+                 scales = scale,
+                 powerscales = FALSE,
+                 wname = wname,
+                 wparam = wparam,
+                 waverad = 1, # For not calling wavelet_radius infinitely!
+                 makefigure = FALSE)
+  coefs <- cwt$coefs
   abscoefs <- abs(coefs)
 
   area <- numeric(nt)

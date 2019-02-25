@@ -5,33 +5,44 @@
 \title{Scalogram of a signal}
 \usage{
 scalogram(signal,
+                 dt = 1,
                  scales = NULL,
                  powerscales = TRUE,
                  wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
                  wparam = NULL,
+                 waverad = NULL,
                  border_effects = c("BE", "INNER", "PER", "SYM"),
                  energy_density = TRUE,
-                 makefigure = FALSE)
+                 makefigure = TRUE,
+                 figureperiod = TRUE)
 }
 \arguments{
-\item{signal}{A vector containing the signal whose wavelet transform is wanted. The
-unit of time is taken as the time difference between two consecutive data.}
+\item{signal}{A vector containing the signal whose scalogram is wanted.}
 
-\item{scales}{A vector with the wavelet scales measured in units of time. This can be
-either a vector with all the scales, or (if \code{powerscales = TRUE}) following
-Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum
-scale and the number of suboctaves per octave.}
+\item{dt}{Numeric. The time step of the signal.}
 
-\item{powerscales}{Logical. Construct power 2 scales.}
+\item{scales}{A vector containing the wavelet scales at wich the scalogram is computed.
+This can be either a vector with all the scales, or (if \code{powerscales} is TRUE)
+following Torrence and Compo 1998, a vector of three elements with the minimum scale,
+the maximum scale and the number of suboctaves per octave. If NULL, they are
+automatically computed.}
+
+\item{powerscales}{Logical. If TRUE (default), construct power 2 scales from
+\code{scales}. If \code{scales} is NULL, they are automatically computed.}
 
 \item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
-\item{wparam}{Numeric. Parameters of the corresponding wavelet.}
+\item{wparam}{The corresponding nondimensional parameter for the wavelet function
+(Morlet, DoG or Paul).}
 
-\item{border_effects}{String, equal to "BE", "INNER", "PER" or "SYM",
-which indicates how to manage the border effects which arise usually when a convolution
-is performed on finite-lenght signals.
+\item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
+of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
+and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
+
+\item{border_effects}{String, equal to "BE", "INNER", "PER" or "SYM", which indicates
+how to manage the border effects which arise usually when a convolution is performed on
+finite-lenght signals.
 \itemize{
 \item "BE": With border effects, padding time series with zeroes.
 \item "INNER": Normalized inner scalogram with security margin adapted for each
@@ -42,25 +53,29 @@ original time series).
 series.
 }}
 
-\item{energy_density}{Logical. Divide the scalogram by sqrt(scales) for convert it into
-energy density (defaults to TRUE).}
+\item{energy_density}{Logical. If TRUE (default), divide the scalogram by the square
+root of the scales for convert it into energy density.}
 
-\item{makefigure}{Logical. Plots a figure with the scalogram.}
+\item{makefigure}{Logical. If TRUE (default), a figure with the scalogram is plotted.}
+
+\item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
+of scales.}
 }
 \value{
 A list with the following fields:
-
-\code{scalog}: A vector of length \code{length(scales)}, containing the values of the
-scalogram at each scale.
-
-\code{scales}: The vector of scales.
+\itemize{
+\item \code{scalog}: A vector of length \code{length(scales)}, containing the values of
+the scalogram at each scale.
+\item \code{scales}: The vector of scales.
+\item \code{fourier_factor}: A factor for converting scales to periods.
+}
 }
 \description{
 This function computes the normalized scalogram of a signal for the scales
 given. It is important to note that the notion of scalogram here is analogous
 to the spectrum of the Fourier transform. It gives the contribution of each scale to
 the total energy of the signal. For each scale \eqn{s}, it is defined as the square
-root of the integral of the squared modulus of the wavelet transform w.r.t the time
+root of the integral of the squared modulus of the wavelet transform w.r.t. the time
 variable \eqn{t}, i.e.
 
   \deqn{S(s):= (\int_{-\infty}^{+\infty}|Wf(t,s)|^2 dt)^{1/2}.}{%
@@ -81,8 +96,9 @@ novel wavelet tool for comparing time series. Appl. Math. Comput., 312 (2017), 4
 }
 
 \examples{
-time <- 1:500
-signal <- c(sin(pi * time / 8), sin(pi * time / 16))
-scalog <- scalogram(signal = signal, border_effects = "INNER", makefigure = TRUE)
+dt <- 0.1
+time <- seq(0, 50, dt)
+signal <- c(sin(pi * time), sin(pi * time / 2))
+scalog <- scalogram(signal = signal, dt = dt, border_effects = "INNER")
 
 }

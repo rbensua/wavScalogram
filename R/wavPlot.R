@@ -87,14 +87,16 @@ wavPlot <-
   if (Ylog) {
     YY <- log2(Y)
     Ystep <- 1
-    labels <- floor(2 ^ (seq(from = YY[1], to = YY[Ylen], by = Ystep)))
+    #labels <- floor(2 ^ (seq(from = YY[1], to = YY[Ylen], by = Ystep)))
+    labels <- round(2 ^ (seq(from = YY[1], to = YY[Ylen], by = Ystep)), 2)
     if(!is.null(coi)) {
       plotcoi <- log2(coi)
     }
   } else {
     YY <- Y
     Ystep <- (Y[Ylen] - Y[1]) / 6
-    labels <- floor(seq(from = YY[1], to = YY[Ylen], by = Ystep))
+    #labels <- floor(seq(from = YY[1], to = YY[Ylen], by = Ystep))
+    labels <- round(seq(from = YY[1], to = YY[Ylen], by = Ystep), 2)
     if(!is.null(coi)) {
       plotcoi <- coi
     }

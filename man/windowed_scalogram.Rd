@@ -5,44 +5,58 @@
 \title{Windowed scalograms of a signal}
 \usage{
 windowed_scalogram(signal,
+                          dt = 1,
                           scales = NULL,
                           powerscales = TRUE,
                           windowrad = NULL,
                           delta_t = NULL,
                           wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
                           wparam = NULL,
+                          waverad = NULL,
                           border_effects = c("BE", "INNER", "PER", "SYM"),
                           energy_density = TRUE,
-                          makefigure = FALSE)
+                          makefigure = TRUE,
+                          time_values = NULL,
+                          figureperiod = TRUE)
 }
 \arguments{
-\item{signal}{A vector containing the signal whose wavelet transform is wanted. The
-unit of time is taken as the time difference between two consecutive data.}
+\item{signal}{A vector containing the signal whose windowed scalogram is wanted.}
 
-\item{scales}{A vector containing the wavelet scales measured in units of time. This
-can be either a vector with all the scales, or (if \code{powerscales = TRUE}) following
-Torrence and Compo 1998, a vector of three elements with the minimum scale, the maximum
-scale and the number of suboctaves per octave.}
+\item{dt}{Numeric. The time step of the signal.}
 
-\item{powerscales}{Logical. Construct power 2 scales.}
+\item{scales}{A vector containing the wavelet scales at wich
+the windowed scalogram is computed. This can be either a vector with all the scales, or
+(if \code{powerscales} is TRUE) following Torrence and Compo 1998, a vector of three
+elements with the minimum scale, the maximum scale and the number of suboctaves per
+octave. If NULL, they are automatically computed.}
 
-\item{windowrad}{Numeric. Radius for the time windows.}
+\item{powerscales}{Logical. If TRUE (default), construct power 2 scales from
+\code{scales}. If \code{scales} is NULL, they are automatically computed.}
 
-\item{delta_t}{Numeric. Increment of time for the construction of windows central
-times.}
+\item{windowrad}{Integer. Time radius for the windows, measured in \code{dt}. By
+default, it is set to \eqn{celing(length(signal1) / 20)}.}
+
+\item{delta_t}{Integer. Increment of time for the construction of windows central
+times, measured in \code{dt}. By default, it is set to
+\eqn{celing(length(signal) / 256)}.}
 
 \item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
-\item{wparam}{Numeric. Parameters of the corresponding wavelet.}
+\item{wparam}{The corresponding nondimensional parameter for the wavelet function
+(Morlet, DoG or Paul).}
 
-\item{border_effects}{String, equal to "BE", "INNER", "PER" or "SYM",
-which indicates how to manage the border effects which arise usually when a convolution
-is performed on finite-lenght signals.
+\item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
+of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
+and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
+
+\item{border_effects}{String, equal to "BE", "INNER", "PER" or "SYM", which indicates
+how to manage the border effects which arise usually when a convolution is performed on
+finite-lenght signals.
 \itemize{
 \item "BE": With border effects, padding time series with zeroes.
 \item "INNER": Normalized inner scalogram with security margin adapted for each
-    different scale. Altough there are no border effects, it is shown as a regular COI
+    different scale. Although there are no border effects, it is shown as a regular COI
     the zone in which the length of \eqn{J(s)} (see Benítez et al. 2010) is smaller and
     it has to be normalized.
 \item "PER": With border effects, using boundary wavelets (periodization of the
@@ -51,24 +65,30 @@ original time series).
 series.
 }}
 
-\item{energy_density}{Logical. Divide the scalograms by sqrt(scales) for convert them
-into energy density (defaults to TRUE).}
+\item{energy_density}{Logical. If TRUE (default), divide the scalograms by the square
+root of the scales for convert them into energy density.}
 
-\item{makefigure}{Logical. Plots a figure with the scalogram.}
+\item{makefigure}{Logical. If TRUE (default), a figure with the scalograms is plotted.}
+
+\item{time_values}{A numerical vector of length \code{length(signal)} containing custom
+time values for the figure. If NULL (default), it will be computed starting at 0.}
+
+\item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
+of scales.}
 }
 \value{
 A list with the following fields:
-
-\code{wsc}: A matrix of size \code{length(tcentral)}x\code{length(scales)} containing
-the values of the windowed scalograms at each scale and at each time window.
-
-\code{tcentral}: The vector of central times.
-
-\code{scales}: The vector of the scales.
-
-\code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the values
-of the maximum scale from which there are border effects for the respective windowed
-scalogram.
+\itemize{
+\item \code{wsc}: A matrix of size \code{length(tcentral)} x \code{length(scales)}
+containing the values of the windowed scalograms at each scale and at each time window.
+\item \code{tcentral}: The vector of central times at which the windows are centered.
+\item \code{scales}: The vector of the scales.
+\item \code{windowrad}: Radius for the time windows, measured in \code{dt}.
+\item \code{fourier_factor}: A factor for converting scales to periods.
+\item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
+values of the maximum scale from which there are border effects for the respective
+central time.
+}
 }
 \description{
 This function computes the normalized windowed scalograms of a signal for
@@ -101,9 +121,10 @@ non-periodicity. Comput. Math. Appl. 60 (2010), no. 3, 634-641.
 }
 
 \examples{
-time <- 1:500
-signal <- c(sin(pi * time / 8), sin(pi * time / 16))
-wscalog <- windowed_scalogram(signal = signal, makefigure = TRUE)
+dt <- 0.1
+time <- seq(0, 50, dt)
+signal <- c(sin(pi * time), sin(pi * time / 2))
+wscalog <- windowed_scalogram(signal = signal, dt = dt)
 
 
 }

@@ -16,6 +16,7 @@
 #' \eqn{s in [s_{max},2s_1]}.
 #'
 #' @usage windowed_scale_index(signal,
+#'                             dt = 1,
 #'                             scales = NULL,
 #'                             powerscales = TRUE,
 #'                             s1 = NULL,
@@ -23,24 +24,36 @@
 #'                             delta_t = NULL,
 #'                             wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
 #'                             wparam = NULL,
+#'                             waverad = NULL,
 #'                             border_effects = c("BE", "INNER", "PER", "SYM"),
-#'                             makefigure = FALSE)
+#'                             makefigure = TRUE,
+#'                             time_values = NULL,
+#'                             figureperiod = TRUE)
 #'
 #' @param signal A vector containing the signal whose windowed scale indices are wanted.
-#' The unit of time is taken as the time difference between two consecutive data.
-#' @param scales A vector containing the wavelet scales measured in units of time. This
-#' can be either a vector with all the scales, or (if \code{powerscales = TRUE})
-#' following Torrence and Compo 1998, a vector of three elements with the minimum scale,
-#' the maximum scale and the number of suboctaves per octave.
-#' @param powerscales Logical. Construct power 2 scales.
+#' @param dt Numeric. The time step of the signal.
+#' @param scales A vector containing the wavelet scales at wich the windowed scalograms
+#' are computed. This can be either a vector with all the scales, or (if
+#' \code{powerscales} is TRUE) following Torrence and Compo 1998, a vector of three
+#' elements with the minimum scale, the maximum scale and the number of suboctaves per
+#' octave. If NULL, they are automatically computed.
+#' @param powerscales Logical. If TRUE (default), construct power 2 scales from
+#' \code{scales}. If \code{scales} is NULL, they are automatically computed.
 #' @param s1 A vector containing the scales \eqn{s_1}. The windowed scale indices are
-#' computed in the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale.
-#' @param windowrad Numeric. Radius for the time windows.
-#' @param delta_t Numeric. Increment of time for the construction of windows central
-#' times.
+#' computed in the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale in
+#' \code{scales}.
+#' @param windowrad Integer. Time radius for the windows, measured in \code{dt}. By
+#' default, it is set to \eqn{celing(length(signal1) / 20)}.
+#' @param delta_t Integer. Increment of time for the construction of windows central
+#' times, measured in \code{dt}. By default, it is set to
+#' \eqn{celing(length(signal) / 256)}.
 #' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 #' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
-#' @param wparam Numeric. Parameters of the corresponding wavelet.
+#' @param wparam The corresponding nondimensional parameter for the wavelet function
+#' (Morlet, DoG or Paul).
+#' @param waverad Numeric. The radius of the wavelet used in the computations for the cone
+#' of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
+#' and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.
 #' @param border_effects A string, equal to "BE", "INNER", "PER" or "SYM", which indicates
 #' how to manage the border effects which arise usually when a convolution is performed on
 #' finite-lenght signals.
@@ -53,33 +66,41 @@
 #' \item "SYM": With border effects, using a symmetric catenation of the original time
 #' series.
 #' }
-#' @param makefigure Logical. Plots a figure with the windowed scale indices.
+#' @param makefigure Logical. If TRUE (default), a figure with the windowed scale indices
+#' is plotted.
+#' @param time_values A numerical vector of length \code{length(signal)} containing custom
+#' time values for the figure. If NULL (default), it will be computed starting at 0.
+#' @param figureperiod Logical. If TRUE (default), periods are used in the figure instead
+#' of scales.
 #'
 #' @return A list with the following fields:
-#'
-#' \code{wsi}: A matrix of size \code{length(tcentral)}x\code{length(s1)} containing
-#' the values of the corresponding windowed scale indices.
-#'
-#' \code{smax}: A vector of length \code{length(tcentral)} containing the scales
-#' \eqn{s_{max}}.
-#'
-#' \code{smin}: A vector of length \code{length(tcentral)} containing the scales
-#' \eqn{s_{min}}.
-#'
-#' \code{tcentral}: The vector of central times used in the computation of the \code{wsi}.
-#'
-#' \code{s1}: The vector of scales \eqn{s_1}.
-#'
-#' \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the values
-#' of the maximum scale from which there are border effects.
+#' \itemize{
+#' \item \code{wsi}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+#' containing the values of the corresponding windowed scale indices.
+#' \item \code{s1}: The vector of scales \eqn{s_1}.
+#' \item \code{smax}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+#' containing the scales \eqn{s_{max}}.
+#' \item \code{smin}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+#' containing the scales \eqn{s_{min}}.
+#' \item \code{scalog_smax}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+#' containing the values of the corresponding scalograms at scales \eqn{s_{max}}.
+#' \item \code{scalog_smin}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
+#' containing the values of the corresponding scalograms at scales \eqn{s_{min}}.
+#' \item \code{tcentral}: The vector of central times used in the computation of
+#' \code{wsi}.
+#' \item \code{fourier_factor}: A factor for converting scales to periods.
+#' \item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
+#' values of the maximum scale from which there are border effects.
+#' }
 #'
 #' @importFrom fields image.plot
 #' @importFrom colorRamps matlab.like
 #'
 #' @examples
-#' time <- 1:500
-#' signal <- c(sin(pi * time / 8), sin(pi * time / 16))
-#' wsi <- windowed_scale_index(signal = signal, makefigure = TRUE)
+#' dt <- 0.1
+#' time <- seq(0, 50, dt)
+#' signal <- c(sin(pi * time), sin(pi * time / 2))
+#' wsi <- windowed_scale_index(signal = signal, dt = dt)
 #'
 #' @section References:
 #'
@@ -91,6 +112,7 @@
 
 windowed_scale_index <-
   function(signal,
+           dt = 1,
            scales = NULL,
            powerscales = TRUE,
            s1 = NULL,
@@ -98,18 +120,24 @@ windowed_scale_index <-
            delta_t = NULL,
            wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
            wparam = NULL,
+           waverad = NULL,
            border_effects = c("BE", "INNER", "PER", "SYM"),
-           makefigure = FALSE) {
+           makefigure = TRUE,
+           time_values = NULL,
+           figureperiod = TRUE) {
 
   wname <- toupper(wname)
   wname <- match.arg(wname)
-  if (wname == "MORLET") {
-    waverad <- 3
-  } else if ((wname == "HAAR") || (wname == "HAAR2")) {
-    waverad <- 0.5
-  } else {
-    waverad <- wavelet_radius(wname = wname, wparam = wparam)
-    waverad <- waverad$left
+
+  if (is.null(waverad)) {
+    if (wname == "MORLET") {
+      waverad <- 3
+    } else if ((wname == "HAAR") || (wname == "HAAR2")) {
+      waverad <- 0.5
+    } else {
+      waverad <- wavelet_radius(wname = wname, wparam = wparam)
+      waverad <- waverad$left
+    }
   }
 
   border_effects <- toupper(border_effects)
@@ -133,21 +161,28 @@ windowed_scale_index <-
 
   if (is.null(scales)) {
     if (is.null(s1)) {
-      scmax <- floor((nt - 2 * windowrad) / (2 * waverad))
+      scmax <- floor((nt - 2 * windowrad) / (2 * waverad)) * dt
     } else {
       scmax <- 2 * s1[length(s1)]
     }
     if (powerscales) {
-      scales <- pow2scales(c(2, scmax, ceiling(256 / (log2(scmax) - 1))))
+      scales <- pow2scales(c(2 * dt, scmax, ceiling(256 / (log2(scmax / dt) - 1))))
     } else {
-      scales <- seq(2, scmax, by = scmax / 256)
+      scales <- seq(2 * dt, scmax, by = scmax / 256)
     }
   } else {
-    if (powerscales) {
+    ns <- length(scales)
+    if (powerscales && ns == 3) {
       scales <- pow2scales(scales)
     } else {
-      if (is.unsorted(scales))
+      if (powerscales && ns != 3) {
+        warning("The length of scales is not 3. Powerscales set to FALSE.")
+        powerscales <- FALSE
+      }
+      if (is.unsorted(scales)) {
+        warning("Scales were not sorted.")
         scales <- sort(scales)
+      }
     }
   }
 
@@ -189,24 +224,36 @@ windowed_scale_index <-
   }
 
   wsc <-
-    windowed_scalogram(signal = signal, scales = scales, powerscales = FALSE, windowrad = windowrad,
-                       delta_t = delta_t, wname = wname, wparam = wparam, border_effects = border_effects,
-                       energy_density = FALSE, makefigure = FALSE)
+    windowed_scalogram(signal = signal, dt = dt,
+                       scales = scales, powerscales = FALSE,
+                       windowrad = windowrad,
+                       delta_t = delta_t,
+                       wname = wname, wparam = wparam, waverad = waverad,
+                       border_effects = border_effects,
+                       energy_density = FALSE,
+                       makefigure = FALSE)
 
-  nwsi <- length(wsc$tcentral)
+  tcentraldt <- wsc$tcentral
+  nwsi <- length(tcentraldt)
 
   wsi <- matrix(NA, nrow = nwsi, ncol = ns1)
-  smax <- matrix(0, nrow = nwsi, ncol = ns1)
-  smin <- matrix(0, nrow = nwsi, ncol = ns1)
+  scalog_smax <- wsi
+  scalog_smin <- wsi
+  smax <- wsi
+  smin <- wsi
   epsilon <- max(wsc$wsc, na.rm = TRUE) * 1e-6 # This is considered the "numerical zero"
   for (i in 1:nwsi) {
     ni <- max(which(!is.na(wsc$wsc[i, index_2s1]))) # If border_effects = "INNER" there are NA in wsc.
     for (j in 1:ni) {
-      smax[i, j] <- max(wsc$wsc[i, 1:index_s1[j]])
-      if (smax[i, j] > epsilon) {
+      scalog_smax[i, j] <- max(wsc$wsc[i, 1:index_s1[j]])
+      if (scalog_smax[i, j] > epsilon) {
         index_smax <- which.max(wsc$wsc[i, 1:index_s1[j]])
-        smin[i,j] <- min(wsc$wsc[i, index_smax:index_2s1[j]])
-        wsi[i,j] <- smin[i, j] / smax[i, j]
+        smax[i, j] <- scales[index_smax]
+
+        scalog_smin[i, j] <- min(wsc$wsc[i, index_smax:index_2s1[j]])
+        index_smin <- which.min(wsc$wsc[i, index_smax:index_2s1[j]])
+        smin[i, j] <- scales[index_smax + index_smin - 1]
+        wsi[i, j] <- scalog_smin[i, j] / scalog_smax[i, j]
       }
     }
   }
@@ -214,26 +261,52 @@ windowed_scale_index <-
   # COI
   coi_maxscale <- wsc$coi_maxscale / 2
 
+  fourier_factor <- wsc$fourier_factor
+
   if (makefigure) {
+
+    if (figureperiod) {
+      Y <- fourier_factor * s1
+      coi <- fourier_factor * coi_maxscale
+      Yname <- expression('Period of s'[1])
+    } else {
+      Y <- s1
+      coi <- coi_maxscale
+      Yname <- expression('s'[1])
+    }
+
+    if (is.null(time_values)) {
+      X <- tcentraldt
+    } else {
+      if (length(time_values) != nt) {
+        warning("Invalid length of time_values vector. Changing to default.")
+        X <- tcentraldt
+      } else {
+        X <- time_values[floor(tcentraldt / dt)]
+      }
+    }
+
     wavPlot(
       Z = wsi,
-      X = wsc$tcentral,
-      Y = s1,
+      X = X,
+      Y = Y,
       Ylog = powerscales,
-      coi = coi_maxscale,
+      coi = coi,
       Xname = "Time",
-      Yname = "s1",
-      Zname = "WSI"
+      Yname = Yname,
+      Zname = "Windowed Scale Index"
     )
   }
 
-
   return(list(
     wsi = wsi,
+    s1 = s1,
     smax = smax,
     smin = smin,
-    tcentral = wsc$tcentral,
-    s1 = s1,
+    scalog_smax = scalog_smax,
+    scalog_smin = scalog_smin,
+    tcentral = tcentraldt,
+    fourier_factor = fourier_factor,
     coi_maxscale = coi_maxscale
   ))
 }

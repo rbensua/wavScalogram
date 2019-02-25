@@ -15,7 +15,8 @@ wavelet_radius(wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
 \item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
 
-\item{wparam}{Numeric. Parameters of the corresponding wavelet.}
+\item{wparam}{The corresponding nondimensional parameter for the wavelet function
+(Morlet, DoG or Paul).}
 
 \item{perc}{Numeric. The wavelet radius is computed so that the area covered is at
 least the 100*(1-\code{perc})\% of the total area of the mother wavelet.}
@@ -30,10 +31,10 @@ its modulus.}
 }
 \value{
 A list with the following fields:
-
-\code{left}: The radius on the left.
-
-\code{right}: The radius on the right.
+\itemize{
+\item \code{left}: The radius on the left.
+\item \code{right}: The radius on the right.
+}
 }
 \description{
 This function computes an approximation of the effective radius of a mother wavelet.
