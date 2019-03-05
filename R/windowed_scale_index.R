@@ -95,12 +95,16 @@
 #'
 #' @importFrom fields image.plot
 #' @importFrom colorRamps matlab.like
+#' @importFrom graphics abline
 #'
 #' @examples
 #' dt <- 0.1
 #' time <- seq(0, 50, dt)
 #' signal <- c(sin(pi * time), sin(pi * time / 2))
-#' wsi <- windowed_scale_index(signal = signal, dt = dt)
+#' # First, we try with default s1 scales (a vector with a wide range of values for s1).
+#' wsi_full <- windowed_scale_index(signal = signal, dt = dt, figureperiod = FALSE)
+#' # Next, we choose a meaningful s1 value, greater than all relevant scales.
+#' wsi <- windowed_scale_index(signal = signal, dt = dt, s1 = 4, figureperiod = FALSE)
 #'
 #' @section References:
 #'
@@ -286,16 +290,23 @@ windowed_scale_index <-
       }
     }
 
-    wavPlot(
-      Z = wsi,
-      X = X,
-      Y = Y,
-      Ylog = powerscales,
-      coi = coi,
-      Xname = "Time",
-      Yname = Yname,
-      Zname = "Windowed Scale Index"
-    )
+    if (length(Y) > 1) {
+      wavPlot(
+        Z = wsi,
+        X = X,
+        Y = Y,
+        Ylog = powerscales,
+        coi = coi,
+        Xname = "Time",
+        Yname = Yname,
+        Zname = "Windowed Scale Index"
+      )
+    } else {
+      plot(X, wsi, type = "l", xlab = "Time", ylab = "Windowed Scale Index", main = "Windowed Scale Index", xaxt = "n")
+      axis(side = 1, at = X[1 + floor((0:8) * (nwsi - 1) / 8)])
+      abline(v = range(X[(coi > Y)]), lty = 2)
+    }
+
   }
 
   return(list(

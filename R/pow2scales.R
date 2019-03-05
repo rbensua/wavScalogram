@@ -7,7 +7,7 @@
 #' @usage pow2scales(scales)
 #'
 #' @param scales A vector of three elements with the minimum scale, the maximum scale and
-#' the number of suboctaves per octave.
+#' the number ofsuboctaves per octave.
 #'
 #' @return A vector with all the scales.
 #'
@@ -29,7 +29,7 @@ pow2scales <- function(scales) {
     scmax <- scales[2]
     J1 <- log2(scmax / scmin)
     Dj <- scales[3]
-    scales <- scmin * 2 ^ ((0:floor(J1 * Dj)) / Dj)
+    scales <- scmin * 2 ^ ((0:ceiling(J1 * Dj)) / Dj)
   } else {
     stop("For power scales, a vector of length three should be provided.")
   }

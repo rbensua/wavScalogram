@@ -88,6 +88,8 @@
 #' central time.
 #' }
 #'
+#' @importFrom graphics abline
+#'
 #' @examples
 #' dt <- 0.1
 #' time <- seq(0, 50, dt)
@@ -215,7 +217,7 @@ windowed_scalogram <-
       ntcentral <- length(tcentral)
       wsc <- matrix(NA, nrow = ntcentral, ncol = ns)
 
-      abscoefs2 <- abs(coefs) ^ 2
+      abscoefs2 <- matrix(abs(coefs) ^ 2, nrow = nt, ncol = ns)
 
       # Regular version
       for (i in 1:ntcentral) {
@@ -239,7 +241,7 @@ windowed_scalogram <-
       ntcentral <- length(tcentral)
       wsc <- matrix(0, nrow = ntcentral, ncol = ns)
 
-      abscoefs2 <- abs(coefs) ^ 2
+      abscoefs2 <- matrix(abs(coefs) ^ 2, nrow = nt, ncol = ns)
 
       if (delta_t < windowrad) { # Fast version
         for (j in 1:ns) {
@@ -299,16 +301,22 @@ windowed_scalogram <-
         }
       }
 
-      wavPlot(
-        Z = wsc,
-        X = X,
-        Y = Y,
-        Ylog = powerscales,
-        coi = coi,
-        Xname = "Time",
-        Yname = Yname,
-        Zname = "Windowed Scalogram"
-      )
+      if (length(Y) > 1) {
+        wavPlot(
+          Z = wsc,
+          X = X,
+          Y = Y,
+          Ylog = powerscales,
+          coi = coi,
+          Xname = "Time",
+          Yname = Yname,
+          Zname = "Windowed Scalogram"
+        )
+      } else {
+        plot(X, wsc, type = "l", xlab = "Time", ylab = "Windowed Scalogram", main = "Windowed Scalogram", xaxt = "n")
+        axis(side = 1, at = X[1 + floor((0:8) * (ntcentral - 1) / 8)])
+        abline(v = range(X[(coi > Y)]), lty = 2)
+      }
 
     }
 

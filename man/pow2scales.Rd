@@ -8,7 +8,7 @@ pow2scales(scales)
 }
 \arguments{
 \item{scales}{A vector of three elements with the minimum scale, the maximum scale and
-the number of suboctaves per octave.}
+the number ofsuboctaves per octave.}
 }
 \value{
 A vector with all the scales.

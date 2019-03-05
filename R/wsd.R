@@ -212,7 +212,7 @@ wsd <-
     ns <- length(scales)
 
     if (is.null(rdist)) {
-      rdist <- floor(ns / 20)
+      rdist <- ceiling(ns / 20)
     }
 
     ### Scalograms
