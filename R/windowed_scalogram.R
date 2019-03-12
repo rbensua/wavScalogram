@@ -30,7 +30,10 @@
 #'                           energy_density = TRUE,
 #'                           makefigure = TRUE,
 #'                           time_values = NULL,
-#'                           figureperiod = TRUE)
+#'                           figureperiod = TRUE,
+#'                           xlab = "Time",
+#'                           ylab = NULL,
+#'                           main = "Windowed Scalogram")
 #'
 #' @param signal A vector containing the signal whose windowed scalogram is wanted.
 #' @param dt Numeric. The time step of the signal.
@@ -42,17 +45,17 @@
 #' @param powerscales Logical. If TRUE (default), construct power 2 scales from
 #' \code{scales}. If \code{scales} is NULL, they are automatically computed.
 #' @param windowrad Integer. Time radius for the windows, measured in \code{dt}. By
-#' default, it is set to \eqn{celing(length(signal1) / 20)}.
+#' default, it is set to \eqn{ceiling(length(signal) / 20)}.
 #' @param delta_t Integer. Increment of time for the construction of windows central
 #' times, measured in \code{dt}. By default, it is set to
-#' \eqn{celing(length(signal) / 256)}.
+#' \eqn{ceiling(length(signal) / 256)}.
 #' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 #' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
 #' @param wparam The corresponding nondimensional parameter for the wavelet function
 #' (Morlet, DoG or Paul).
 #' @param waverad Numeric. The radius of the wavelet used in the computations for the cone
-#' of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-#' and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.
+#' of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+#' \eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.
 #' @param border_effects String, equal to "BE", "INNER", "PER" or "SYM", which indicates
 #' how to manage the border effects which arise usually when a convolution is performed on
 #' finite-lenght signals.
@@ -74,6 +77,11 @@
 #' time values for the figure. If NULL (default), it will be computed starting at 0.
 #' @param figureperiod Logical. If TRUE (default), periods are used in the figure instead
 #' of scales.
+#' @param xlab A string giving a custom X axis label.
+#' @param ylab A string giving a custom Y axis label. If NULL (default) the Y label is
+#' either "Scale" or "Period" depending on the value of \code{figureperiod} if
+#' \code{length(scales) > 1}, or "Windowed Scalogram" if \code{length(scales) == 1}.
+#' @param main A string giving a custom main title for the figure.
 #'
 #' @return A list with the following fields:
 #' \itemize{
@@ -82,7 +90,7 @@
 #' \item \code{tcentral}: The vector of central times at which the windows are centered.
 #' \item \code{scales}: The vector of the scales.
 #' \item \code{windowrad}: Radius for the time windows, measured in \code{dt}.
-#' \item \code{fourier_factor}: A factor for converting scales to periods.
+#' \item \code{fourierfactor}: A factor for converting scales into periods.
 #' \item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
 #' values of the maximum scale from which there are border effects for the respective
 #' central time.
@@ -126,7 +134,10 @@ windowed_scalogram <-
            energy_density = TRUE,
            makefigure = TRUE,
            time_values = NULL,
-           figureperiod = TRUE) {
+           figureperiod = TRUE,
+           xlab = "Time",
+           ylab = NULL,
+           main = "Windowed Scalogram") {
 
   #  require(zoo)
   #  require(Matrix)
@@ -135,13 +146,12 @@ windowed_scalogram <-
     wname <- match.arg(wname)
 
     if (is.null(waverad)) {
-      if (wname == "MORLET") {
-        waverad <- 3
-      } else if ((wname == "HAAR") || (wname == "HAAR2")) {
+      if ((wname == "MORLET") || (wname == "DOG")) {
+        waverad <- sqrt(2)
+      } else if (wname == "PAUL") {
+        waverad <- 1 / sqrt(2)
+      } else { # HAAR
         waverad <- 0.5
-      } else {
-        waverad <- wavelet_radius(wname = wname, wparam = wparam)
-        waverad <- waverad$left
       }
     }
 
@@ -165,12 +175,15 @@ windowed_scalogram <-
       windowrad <- min(windowrad, floor((nt - 1) / 2))
     }
 
+    fourierfactor <- fourier_factor(wname = wname, wparam = wparam)
+
     if (is.null(scales)) {
+      scmin <- 2 / fourierfactor
       scmax <- floor((nt - 2 * windowrad) / (2 * waverad))
       if (powerscales) {
-        scales <- pow2scales(c(2, scmax, ceiling(256 / (log2(scmax) - 1))))
+        scales <- pow2scales(c(scmin, scmax, ceiling(256 / log2(scmax / scmin))))
       } else {
-        scales <- seq(2, scmax, by = scmax / 256)
+        scales <- seq(scmin, scmax, by = (scmax - scmin) / 256)
       }
       scalesdt <- scales * dt
     } else {
@@ -275,19 +288,17 @@ windowed_scalogram <-
       wsc <- t(t(wsc) / sqrt(scalesdt))
     }
 
-    fourier_factor <- cwt$fourier_factor
-
     # Make figure
     if (makefigure) {
 
       if (figureperiod) {
-        Y <- fourier_factor * scalesdt
-        coi <- fourier_factor * coi_maxscale
-        Yname <- "Period"
+        Y <- fourierfactor * scalesdt
+        coi <- fourierfactor * coi_maxscale
+        if (is.null(ylab)) ylab <- "Period"
       } else {
         Y <- scalesdt
         coi <- coi_maxscale
-        Yname <- "Scale"
+        if (is.null(ylab)) ylab <- "Scale"
       }
 
       if (is.null(time_values)) {
@@ -308,12 +319,13 @@ windowed_scalogram <-
           Y = Y,
           Ylog = powerscales,
           coi = coi,
-          Xname = "Time",
-          Yname = Yname,
-          Zname = "Windowed Scalogram"
+          Xname = xlab,
+          Yname = ylab,
+          Zname = main
         )
       } else {
-        plot(X, wsc, type = "l", xlab = "Time", ylab = "Windowed Scalogram", main = "Windowed Scalogram", xaxt = "n")
+        if (is.null(ylab)) ylab <- "Windowed Scalogram"
+        plot(X, wsc, type = "l", xlab = xlab, ylab = ylab, main = main, xaxt = "n")
         axis(side = 1, at = X[1 + floor((0:8) * (ntcentral - 1) / 8)])
         abline(v = range(X[(coi > Y)]), lty = 2)
       }
@@ -325,7 +337,7 @@ windowed_scalogram <-
       tcentral = tcentraldt,
       scales = scalesdt,
       windowrad = windowrad,
-      fourier_factor = fourier_factor,
+      fourierfactor = fourierfactor,
       coi_maxscale = as.numeric(coi_maxscale)
     ))
   }

@@ -17,7 +17,10 @@ windowed_scalogram(signal,
                           energy_density = TRUE,
                           makefigure = TRUE,
                           time_values = NULL,
-                          figureperiod = TRUE)
+                          figureperiod = TRUE,
+                          xlab = "Time",
+                          ylab = NULL,
+                          main = "Windowed Scalogram")
 }
 \arguments{
 \item{signal}{A vector containing the signal whose windowed scalogram is wanted.}
@@ -34,11 +37,11 @@ octave. If NULL, they are automatically computed.}
 \code{scales}. If \code{scales} is NULL, they are automatically computed.}
 
 \item{windowrad}{Integer. Time radius for the windows, measured in \code{dt}. By
-default, it is set to \eqn{celing(length(signal1) / 20)}.}
+default, it is set to \eqn{ceiling(length(signal) / 20)}.}
 
 \item{delta_t}{Integer. Increment of time for the construction of windows central
 times, measured in \code{dt}. By default, it is set to
-\eqn{celing(length(signal) / 256)}.}
+\eqn{ceiling(length(signal) / 256)}.}
 
 \item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
@@ -47,8 +50,8 @@ difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slowe
 (Morlet, DoG or Paul).}
 
 \item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
-of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
+of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+\eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.}
 
 \item{border_effects}{String, equal to "BE", "INNER", "PER" or "SYM", which indicates
 how to manage the border effects which arise usually when a convolution is performed on
@@ -75,6 +78,14 @@ time values for the figure. If NULL (default), it will be computed starting at 0
 
 \item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
 of scales.}
+
+\item{xlab}{A string giving a custom X axis label.}
+
+\item{ylab}{A string giving a custom Y axis label. If NULL (default) the Y label is
+either "Scale" or "Period" depending on the value of \code{figureperiod} if
+\code{length(scales) > 1}, or "Windowed Scalogram" if \code{length(scales) == 1}.}
+
+\item{main}{A string giving a custom main title for the figure.}
 }
 \value{
 A list with the following fields:
@@ -84,7 +95,7 @@ containing the values of the windowed scalograms at each scale and at each time 
 \item \code{tcentral}: The vector of central times at which the windows are centered.
 \item \code{scales}: The vector of the scales.
 \item \code{windowrad}: Radius for the time windows, measured in \code{dt}.
-\item \code{fourier_factor}: A factor for converting scales to periods.
+\item \code{fourierfactor}: A factor for converting scales into periods.
 \item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
 values of the maximum scale from which there are border effects for the respective
 central time.

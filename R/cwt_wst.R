@@ -21,7 +21,11 @@
 #'                makefigure = TRUE,
 #'                time_values = NULL,
 #'                energy_density = FALSE,
-#'                figureperiod = TRUE)
+#'                figureperiod = TRUE,
+#'                xlab = "Time",
+#'                ylab = NULL,
+#'                main = NULL)
+#'
 #' @param signal A vector containing the signal whose wavelet transform is wanted.
 #' @param dt Numeric. The time step of the signal.
 #' @param scales A vector containing the wavelet scales at wich the CWT is computed. This
@@ -36,8 +40,8 @@
 #' @param wparam The corresponding nondimensional parameter for the wavelet function
 #' (Morlet, DoG or Paul).
 #' @param waverad Numeric. The radius of the wavelet used in the computations for the cone
-#' of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-#' and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.
+#' of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+#' \eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.
 #' @param border_effects String, equal to "BE", "PER" or "SYM", which indicates how to
 #' manage the border effects which arise usually when a convolution is performed on
 #' finite-lenght signals.
@@ -54,13 +58,19 @@
 #' the scales in the figure and so, values for different scales are comparable.
 #' @param figureperiod Logical. If TRUE (default), periods are used in the figure instead
 #' of scales.
+#' @param xlab A string giving a custom X axis label.
+#' @param ylab A string giving a custom Y axis label. If NULL (default) the Y label is
+#' either "Scale" or "Period" depending on the value of \code{figureperiod}.
+#' @param main A string giving a custom main title for the figure. If NULL
+#' (default) the main title is either "Wavelet Power Spectrum / Scales" or "Wavelet Power
+#' Spectrum" depending on the value of \code{energy_density}.
 #'
 #' @return A list with the following fields:
 #' \itemize{
 #' \item \code{coefs}: A matrix of size \code{length(signal)} x \code{length(scales)},
 #' containing the CWT coefficients of the signal.
 #' \item \code{scales}: The vector of scales.
-#' \item \code{fourier_factor}: A factor for converting scales to periods.
+#' \item \code{fourierfactor}: A factor for converting scales into periods.
 #' \item \code{coi_maxscale}: A vector of length \code{length(signal)} containing the
 #' values of the maximum scale from which there are border effects at each time.
 #' }
@@ -91,19 +101,22 @@ cwt_wst <-
            makefigure = TRUE,
            time_values = NULL,
            energy_density = FALSE,
-           figureperiod = TRUE) {
+           figureperiod = TRUE,
+           xlab = "Time",
+           ylab = NULL,
+           main = NULL
+           ) {
 
   wname <- toupper(wname)
   wname <- match.arg(wname)
 
   if (is.null(waverad)) {
-    if (wname == "MORLET") {
-      waverad <- 3
-    } else if ((wname == "HAAR") || (wname == "HAAR2")) {
+    if ((wname == "MORLET") || (wname == "DOG")) {
+      waverad <- sqrt(2)
+    } else if (wname == "PAUL") {
+      waverad <- 1 / sqrt(2)
+    } else { # HAAR
       waverad <- 0.5
-    } else {
-      waverad <- wavelet_radius(wname = wname, wparam = wparam)
-      waverad <- waverad$left
     }
   }
 
@@ -112,12 +125,15 @@ cwt_wst <-
 
   nt <- length(signal)
 
+  fourierfactor <- fourier_factor(wname = wname, wparam = wparam)
+
   if (is.null(scales)) {
+    scmin <- 2 / fourierfactor
     scmax <- floor(nt / (2 * waverad))
     if (powerscales) {
-      scales <- pow2scales(c(2, scmax, ceiling(256 / (log2(scmax) - 1))))
+      scales <- pow2scales(c(scmin, scmax, ceiling(256 / log2(scmax / scmin))))
     } else {
-      scales <- seq(2, scmax, by = scmax / 256)
+      scales <- seq(scmin, scmax, by = (scmax - scmin) / 256)
     }
     scalesdt <- scales * dt
   } else {
@@ -192,8 +208,6 @@ cwt_wst <-
       coefs[, k] <- -sqrt(a) * core(diff(stats::convolve(signal, f, type = "open")), nt)
     }
 
-    fourier_factor <- 1
-
   } else if (wname == "HAAR2") {
 
     for (j in 1:ns) {
@@ -228,8 +242,6 @@ cwt_wst <-
       #coefs[, j] <- coefs[, j] / sqrt(scales[j])
     }
 
-    fourier_factor <- 1
-
   } else {
 
     f <- stats::fft(signal)
@@ -243,8 +255,7 @@ cwt_wst <-
       if (is.null(wparam)) {
         wparam <- 6
       }
-      k0 <- wparam
-      expnt <- -(diag(x = scales, ncol = ns) %*% matrix(rep(k, ns), nrow = ns, byrow = T) - k0) ^ 2 / 2
+      expnt <- -(diag(x = scales, ncol = ns) %*% matrix(rep(k, ns), nrow = ns, byrow = T) - wparam) ^ 2 / 2
       expnt <- sweep(expnt, MARGIN = 2, (k > 0), `*`)
       Norm <- sqrt(scales * k[2])  *pi ^ (-.25) * sqrt(n)
       daughter <- diag(x = Norm, ncol = ns) %*% exp(expnt)
@@ -252,37 +263,29 @@ cwt_wst <-
 
       coefs <- coefs + 1i*coefs
 
-      fourier_factor <- (4 * pi) / (k0 + sqrt(2 + k0 ^ 2))
-
     } else if (wname == "PAUL") {
 
-      coefs <- coefs + 1i*coefs
       if (is.null(wparam)) {
         wparam <- 4
       }
-      m <- wparam
+      coefs <- coefs + 1i*coefs
       expnt <- -diag(x = scales, ncol = ns) %*% matrix(rep(k, ns), nrow = ns, byrow = T)
       expnt <- sweep(expnt, MARGIN = 2, (k > 0), `*`)
-      Norm <- sqrt(scales * k[2]) * (2 ^ m / sqrt(m * prod(2:(2 * m - 1)))) * sqrt(n)
-      daughter <- diag(x = Norm, ncol = ns) %*% expnt ^ m * exp(expnt)
+      Norm <- sqrt(scales * k[2]) * (2 ^ wparam / sqrt(wparam * prod(2:(2 * wparam - 1)))) * sqrt(n)
+      daughter <- diag(x = Norm, ncol = ns) %*% expnt ^ wparam * exp(expnt)
       daughter <- sweep(daughter, MARGIN = 2, (k > 0), `*`)
 
       coefs <- coefs + 1i*coefs
-
-      fourier_factor <- 4 * pi / (2 * m + 1)
 
     } else if (wname == "DOG") {
 
       if (is.null(wparam)) {
         wparam <- 2
       }
-      m <- wparam
       preexpnt <- (diag(x = scales, ncol = ns) %*% matrix(rep(k, ns), nrow = ns, byrow = T))
       expnt <- -preexpnt ^ 2 / 2
-      Norm <- sqrt(scales * k[2] / gamma(m + 0.5)) * sqrt(n)
-      daughter <- diag(x = -Norm * (1i ^ m), ncol = ns) %*% preexpnt ^ m * exp(expnt)
-
-      fourier_factor <- 2 * pi * sqrt(2 / (2 * m + 1))
+      Norm <- sqrt(scales * k[2] / gamma(wparam + 0.5)) * sqrt(n)
+      daughter <- diag(x = -Norm * (1i ^ wparam), ncol = ns) %*% preexpnt ^ wparam * exp(expnt)
 
     }
 
@@ -303,21 +306,21 @@ cwt_wst <-
   if (makefigure) {
 
     if (figureperiod) {
-      Y <- fourier_factor * scalesdt
-      coi <- fourier_factor * coi_maxscale
-      Yname <- "Period"
+      Y <- fourierfactor * scalesdt
+      coi <- fourierfactor * coi_maxscale
+      if (is.null(ylab)) ylab  <- "Period"
     } else {
       Y <- scalesdt
       coi <- coi_maxscale
-      Yname <- "Scale"
+      if (is.null(ylab)) ylab <- "Scale"
     }
 
     if (energy_density) {
       Z <- t(t(abs(coefs) ^ 2) / scalesdt)
-      Zname <- "Wavelet Power Spectrum / Scales"
+      if (is.null(main)) main <- "Wavelet Power Spectrum / Scales"
     } else {
       Z <- abs(coefs) ^ 2
-      Zname <- "Wavelet Power Spectrum"
+      if (is.null(main)) main <- "Wavelet Power Spectrum"
     }
 
     if (is.null(time_values)) {
@@ -337,9 +340,9 @@ cwt_wst <-
       Y = Y,
       Ylog = powerscales,
       coi = coi,
-      Xname = "Time",
-      Yname = Yname,
-      Zname = Zname
+      Xname = xlab,
+      Yname = ylab,
+      Zname = main
     )
 
   }
@@ -347,7 +350,7 @@ cwt_wst <-
   return(list(
     coefs = coefs,
     scales = scalesdt,
-    fourier_factor = fourier_factor,
+    fourierfactor = fourierfactor,
     coi_maxscale = coi_maxscale
   ))
 

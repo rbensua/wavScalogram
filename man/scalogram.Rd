@@ -14,7 +14,10 @@ scalogram(signal,
                  border_effects = c("BE", "INNER", "PER", "SYM"),
                  energy_density = TRUE,
                  makefigure = TRUE,
-                 figureperiod = TRUE)
+                 figureperiod = TRUE,
+                 xlab = NULL,
+                 ylab = "Scalogram",
+                 main = "Scalogram")
 }
 \arguments{
 \item{signal}{A vector containing the signal whose scalogram is wanted.}
@@ -37,8 +40,8 @@ difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slowe
 (Morlet, DoG or Paul).}
 
 \item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
-of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
+of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+\eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.}
 
 \item{border_effects}{String, equal to "BE", "INNER", "PER" or "SYM", which indicates
 how to manage the border effects which arise usually when a convolution is performed on
@@ -60,6 +63,13 @@ root of the scales for convert it into energy density.}
 
 \item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
 of scales.}
+
+\item{xlab}{A string giving a custom X axis label. If NULL (default) the X label is
+either "Scale" or "Period" depending on the value of \code{figureperiod}.}
+
+\item{ylab}{A string giving a custom Y axis label.}
+
+\item{main}{A string giving a custom main title for the figure.}
 }
 \value{
 A list with the following fields:
@@ -67,7 +77,7 @@ A list with the following fields:
 \item \code{scalog}: A vector of length \code{length(scales)}, containing the values of
 the scalogram at each scale.
 \item \code{scales}: The vector of scales.
-\item \code{fourier_factor}: A factor for converting scales to periods.
+\item \code{fourierfactor}: A factor for converting scales into periods.
 }
 }
 \description{

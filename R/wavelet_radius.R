@@ -87,7 +87,7 @@ wavelet_radius <-
     xright <- (n + 1 - i_right_margin) / scale
     x <- seq(from = xleft, to = xright, by = 1 / scale)
     ylim <- sqrt(scale) * range(abscoefs, Re(coefs))
-    plot(x, sqrt(scale) * abscoefs[i_left_margin:i_right_margin], type = "l", ylim = ylim, lty = 3)
+    plot(x, sqrt(scale) * abscoefs[i_left_margin:i_right_margin], type = "l", xlab = "t", ylab = "", ylim = ylim, lty = 3)
     lines(x, sqrt(scale) * Re(coefs[i_left_margin:i_right_margin]))
     segments(x0 = -right, x1 = -right, y0 = ylim[1], y1 = ylim[2])
     segments(x0 = left, x1 = left, y0 = ylim[1], y1 = ylim[2])

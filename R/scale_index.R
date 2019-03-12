@@ -6,10 +6,10 @@
 #'
 #' The scale index of a signal in the scale interval \eqn{[s_0,s_1]} is given by the
 #' quotient \deqn{\frac{S(s_{min})}{S(s_{max})},}{S(s_{min})/S(s_{max})} where \eqn{S} is
-#' the scalogram, \eqn{s_{max} in [s_0,s_1]} is the smallest scale such that
-#' \eqn{S(s)\le S(s_{max})} for all \eqn{s in [s_0,s_1]}, and
-#' \eqn{s_{min} in [s_{max},2s_1]} is the smallest scale such that
-#' \eqn{S(s_{min})\le S(s)} for all \eqn{s in [s_{max},2s_1]}.
+#' the scalogram, \eqn{s_{max} \in [s_0,s_1]} is the smallest scale such that
+#' \eqn{S(s)\le S(s_{max})} for all \eqn{s \in [s_0,s_1]}, and
+#' \eqn{s_{min} \in [s_{max},2s_1]} is the smallest scale such that
+#' \eqn{S(s_{min})\le S(s)} for all \eqn{s \in [s_{max},2s_1]}.
 #'
 #' @usage scale_index(signal,
 #'                    dt = 1,
@@ -21,7 +21,10 @@
 #'                    waverad = NULL,
 #'                    border_effects = c("BE", "INNER", "PER", "SYM"),
 #'                    makefigure = TRUE,
-#'                    figureperiod = TRUE)
+#'                    figureperiod = TRUE,
+#'                    xlab = NULL,
+#'                    ylab = "Scale index",
+#'                    main = "Scale Index")
 #'
 #' @param signal A vector containing the signal whose scale indices are wanted.
 #' @param dt Numeric. The time step of the signals.
@@ -39,8 +42,8 @@
 #' @param wparam The corresponding nondimensional parameter for the wavelet function
 #' (Morlet, DoG or Paul).
 #' @param waverad Numeric. The radius of the wavelet used in the computations for the cone
-#' of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-#' and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.
+#' of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+#' \eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.
 #' @param border_effects A string, equal to "BE", "INNER", "PER" or "SYM", which indicates
 #' how to manage the border effects which arise usually when a convolution is performed on
 #' finite-lenght signals.
@@ -57,6 +60,10 @@
 #' plotted.
 #' @param figureperiod Logical. If TRUE (default), periods are used in the figure instead
 #' of scales.
+#' @param xlab A string giving a custom X axis label. If NULL (default) the X label is
+#' either "s1" or "Period of s1" depending on the value of \code{figureperiod}.
+#' @param ylab A string giving a custom Y axis label.
+#' @param main A string giving a custom main title for the figure.
 #'
 #' @return A list with the following fields:
 #' \itemize{
@@ -66,7 +73,7 @@
 #' \item \code{smin}: A vector with the scales \eqn{s_{min}}.
 #' \item \code{scalog_smax}: A vector with the maximum scalogram values \eqn{S(s_{max})}.
 #' \item \code{scalog_smin}: A vector with the minimum scalogram values \eqn{S(s_{min})}.
-#' \item \code{fourier_factor}: A factor for converting scales to periods.
+#' \item \code{fourierfactor}: A factor for converting scales into periods.
 #' }
 #'
 #' @examples
@@ -94,19 +101,21 @@ scale_index <-
            waverad = NULL,
            border_effects = c("BE", "INNER", "PER", "SYM"),
            makefigure = TRUE,
-           figureperiod = TRUE) {
+           figureperiod = TRUE,
+           xlab = NULL,
+           ylab = "Scale index",
+           main = "Scale Index") {
 
   wname <- toupper(wname)
   wname <- match.arg(wname)
 
   if (is.null(waverad)) {
-    if (wname == "MORLET") {
-      waverad <- 3
-    } else if ((wname == "HAAR") || (wname == "HAAR2")) {
+    if ((wname == "MORLET") || (wname == "DOG")) {
+      waverad <- sqrt(2)
+    } else if (wname == "PAUL") {
+      waverad <- 1 / sqrt(2)
+    } else { # HAAR
       waverad <- 0.5
-    } else {
-      waverad <- wavelet_radius(wname = wname, wparam = wparam)
-      waverad <- waverad$left
     }
   }
 
@@ -119,16 +128,19 @@ scale_index <-
     s1 <- sort(s1)
   }
 
+  fourierfactor <- fourier_factor(wname = wname, wparam = wparam)
+
   if (is.null(scales)) {
+    scmin <- 2 * dt / fourierfactor
     if (is.null(s1)) {
       scmax <- floor(nt / (2 * waverad)) * dt
     } else {
       scmax <- 2 * s1[length(s1)]
     }
     if (powerscales) {
-      scales <- pow2scales(c(2 * dt, scmax, ceiling(256 / (log2(scmax / dt) - 1))))
+      scales <- pow2scales(c(scmin, scmax, ceiling(256 / log2(scmax / scmin))))
     } else {
-      scales <- seq(2 * dt, scmax, by = scmax / 256)
+      scales <- seq(scmin, scmax, by = (scmax - scmin) / 256)
     }
   } else {
     ns <- length(scales)
@@ -223,20 +235,18 @@ scale_index <-
 
   }
 
-  fourier_factor <- sc$fourier_factor
-
   if (makefigure ) {
     if (length(s1) > 1) {
       if (figureperiod) {
-        X <- fourier_factor * s1
-        xlab <- expression('Period of s'[1])
+        X <- fourierfactor * s1
+        if (is.null(xlab)) xlab <- expression('Period of s'[1])
       } else {
         X <- s1
-        xlab <- expression('s'[1])
+        if (is.null(xlab)) xlab <- expression('s'[1])
       }
-      plot(X, si, type = "l", xlab = xlab, ylab = "Scale index", main = "Scale Index")
+      plot(X, si, type = "l", xlab = xlab, ylab = ylab, main = main)
     } else {
-      stop("We can't plot a line with a unique point.")
+      warning("We can't plot a line with just one point.")
     }
   }
 
@@ -246,6 +256,6 @@ return(list(si = si,
             smin = smin,
             scalog_smax = scalog_smax,
             scalog_smin = scalog_smin,
-            fourier_factor = fourier_factor)
+            fourierfactor = fourierfactor)
        )
 }

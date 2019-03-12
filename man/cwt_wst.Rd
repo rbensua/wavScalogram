@@ -15,7 +15,10 @@ cwt_wst(signal,
                makefigure = TRUE,
                time_values = NULL,
                energy_density = FALSE,
-               figureperiod = TRUE)
+               figureperiod = TRUE,
+               xlab = "Time",
+               ylab = NULL,
+               main = NULL)
 }
 \arguments{
 \item{signal}{A vector containing the signal whose wavelet transform is wanted.}
@@ -38,8 +41,8 @@ difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slowe
 (Morlet, DoG or Paul).}
 
 \item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
-of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
+of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+\eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.}
 
 \item{border_effects}{String, equal to "BE", "PER" or "SYM", which indicates how to
 manage the border effects which arise usually when a convolution is performed on
@@ -61,6 +64,15 @@ the scales in the figure and so, values for different scales are comparable.}
 
 \item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
 of scales.}
+
+\item{xlab}{A string giving a custom X axis label.}
+
+\item{ylab}{A string giving a custom Y axis label. If NULL (default) the Y label is
+either "Scale" or "Period" depending on the value of \code{figureperiod}.}
+
+\item{main}{A string giving a custom main title for the figure. If NULL
+(default) the main title is either "Wavelet Power Spectrum / Scales" or "Wavelet Power
+Spectrum" depending on the value of \code{energy_density}.}
 }
 \value{
 A list with the following fields:
@@ -68,7 +80,7 @@ A list with the following fields:
 \item \code{coefs}: A matrix of size \code{length(signal)} x \code{length(scales)},
 containing the CWT coefficients of the signal.
 \item \code{scales}: The vector of scales.
-\item \code{fourier_factor}: A factor for converting scales to periods.
+\item \code{fourierfactor}: A factor for converting scales into periods.
 \item \code{coi_maxscale}: A vector of length \code{length(signal)} containing the
 values of the maximum scale from which there are border effects at each time.
 }

@@ -29,7 +29,10 @@ pow2scales <- function(scales) {
     scmax <- scales[2]
     J1 <- log2(scmax / scmin)
     Dj <- scales[3]
-    scales <- scmin * 2 ^ ((0:ceiling(J1 * Dj)) / Dj)
+    scales <- scmin * 2 ^ ((0:floor(J1 * Dj)) / Dj)
+    if (scales[length(scales)] < scmax) {
+      scales <- c(scales, scmax)
+    }
   } else {
     stop("For power scales, a vector of length three should be provided.")
   }

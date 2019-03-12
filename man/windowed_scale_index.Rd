@@ -17,7 +17,10 @@ windowed_scale_index(signal,
                             border_effects = c("BE", "INNER", "PER", "SYM"),
                             makefigure = TRUE,
                             time_values = NULL,
-                            figureperiod = TRUE)
+                            figureperiod = TRUE,
+                            xlab = "Time",
+                            ylab = NULL,
+                            main = "Windowed Scale Index")
 }
 \arguments{
 \item{signal}{A vector containing the signal whose windowed scale indices are wanted.}
@@ -37,12 +40,12 @@ octave. If NULL, they are automatically computed.}
 computed in the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale in
 \code{scales}.}
 
-\item{windowrad}{Integer. Time radius for the windows, measured in \code{dt}. By
-default, it is set to \eqn{celing(length(signal1) / 20)}.}
+\item{windowrad}{Integer. Time radius for the windows, measured in dt. By default,
+it is set to \eqn{ceiling(length(signal) / 20)}.}
 
 \item{delta_t}{Integer. Increment of time for the construction of windows central
 times, measured in \code{dt}. By default, it is set to
-\eqn{celing(length(signal) / 256)}.}
+\eqn{ceiling(length(signal) / 256)}.}
 
 \item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
@@ -51,8 +54,8 @@ difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slowe
 (Morlet, DoG or Paul).}
 
 \item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
-of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
+of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+\eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.}
 
 \item{border_effects}{A string, equal to "BE", "INNER", "PER" or "SYM", which indicates
 how to manage the border effects which arise usually when a convolution is performed on
@@ -75,6 +78,14 @@ time values for the figure. If NULL (default), it will be computed starting at 0
 
 \item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
 of scales.}
+
+\item{xlab}{A string giving a custom X axis label.}
+
+\item{ylab}{A string giving a custom Y axis label. If NULL (default) the Y label is
+either "s1" or "Period of s1" depending on the value of \code{figureperiod} if
+\code{length(s1) > 1}, or "Windowed Scale Index" if \code{length(s1) == 1}.}
+
+\item{main}{A string giving a custom main title for the figure.}
 }
 \value{
 A list with the following fields:
@@ -92,7 +103,7 @@ containing the values of the corresponding scalograms at scales \eqn{s_{max}}.
 containing the values of the corresponding scalograms at scales \eqn{s_{min}}.
 \item \code{tcentral}: The vector of central times used in the computation of
 \code{wsi}.
-\item \code{fourier_factor}: A factor for converting scales to periods.
+\item \code{fourierfactor}: A factor for converting scales into periods.
 \item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
 values of the maximum scale from which there are border effects.
 }
@@ -107,11 +118,11 @@ time \eqn{tc} and with time windows radius \code{windowrad} is given by the quot
 \deqn{\frac{WS_{windowrad}(tc,s_{min})}{WS_{windowrad}(tc,s_{max})},}{WS_{windowrad}
 (tc,s_{min})/WS_{windowrad}(tc,s_{max}),}
 where \eqn{WS_{windowrad}} is the corresponding windowed scalogram with time windows
-radius \code{windowrad}, \eqn{s_{max} in [s_0,s_1]} is the smallest scale such that
-\eqn{WS_{windowrad}(tc,s)\le WS_{windowrad}(tc,s_{max})} for all \eqn{s in [s_0,s_1]},
-and \eqn{s_{min} in [s_{max},2s_1]} is the smallest scale such that
+radius \code{windowrad}, \eqn{s_{max} \in [s_0,s_1]} is the smallest scale such that
+\eqn{WS_{windowrad}(tc,s)\le WS_{windowrad}(tc,s_{max})} for all \eqn{s \in [s_0,s_1]},
+and \eqn{s_{min} \in [s_{max},2s_1]} is the smallest scale such that
 \eqn{WS_{windowrad}(tc,s_{min})\le WS_{windowrad}(tc,s)} for all
-\eqn{s in [s_{max},2s_1]}.
+\eqn{s \in [s_{max},2s_1]}.
 }
 \section{References}{
 

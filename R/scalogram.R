@@ -24,7 +24,10 @@
 #'                  border_effects = c("BE", "INNER", "PER", "SYM"),
 #'                  energy_density = TRUE,
 #'                  makefigure = TRUE,
-#'                  figureperiod = TRUE)
+#'                  figureperiod = TRUE,
+#'                  xlab = NULL,
+#'                  ylab = "Scalogram",
+#'                  main = "Scalogram")
 #'
 #' @param signal A vector containing the signal whose scalogram is wanted.
 #' @param dt Numeric. The time step of the signal.
@@ -40,8 +43,8 @@
 #' @param wparam The corresponding nondimensional parameter for the wavelet function
 #' (Morlet, DoG or Paul).
 #' @param waverad Numeric. The radius of the wavelet used in the computations for the cone
-#' of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-#' and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.
+#' of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+#' \eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.
 #' @param border_effects String, equal to "BE", "INNER", "PER" or "SYM", which indicates
 #' how to manage the border effects which arise usually when a convolution is performed on
 #' finite-lenght signals.
@@ -59,13 +62,17 @@
 #' @param makefigure Logical. If TRUE (default), a figure with the scalogram is plotted.
 #' @param figureperiod Logical. If TRUE (default), periods are used in the figure instead
 #' of scales.
+#' @param xlab A string giving a custom X axis label. If NULL (default) the X label is
+#' either "Scale" or "Period" depending on the value of \code{figureperiod}.
+#' @param ylab A string giving a custom Y axis label.
+#' @param main A string giving a custom main title for the figure.
 #'
 #' @return A list with the following fields:
 #' \itemize{
 #' \item \code{scalog}: A vector of length \code{length(scales)}, containing the values of
 #' the scalogram at each scale.
 #' \item \code{scales}: The vector of scales.
-#' \item \code{fourier_factor}: A factor for converting scales to periods.
+#' \item \code{fourierfactor}: A factor for converting scales into periods.
 #' }
 #'
 #' @examples
@@ -96,19 +103,21 @@ scalogram <-
            border_effects = c("BE", "INNER", "PER", "SYM"),
            energy_density = TRUE,
            makefigure = TRUE,
-           figureperiod = TRUE) {
+           figureperiod = TRUE,
+           xlab = NULL,
+           ylab = "Scalogram",
+           main = "Scalogram") {
 
   wname <- toupper(wname)
   wname <- match.arg(wname)
 
   if (is.null(waverad)) {
-    if (wname == "MORLET") {
-      waverad <- 3
-    } else if ((wname == "HAAR") || (wname == "HAAR2")) {
+    if ((wname == "MORLET") || (wname == "DOG")) {
+      waverad <- sqrt(2)
+    } else if (wname == "PAUL") {
+      waverad <- 1 / sqrt(2)
+    } else { # HAAR
       waverad <- 0.5
-    } else {
-      waverad <- wavelet_radius(wname = wname, wparam = wparam)
-      waverad <- waverad$left
     }
   }
 
@@ -155,7 +164,8 @@ scalogram <-
         print("We need more times for these scales")
         scalog <- scalog[1:(i - 1)]
         scales <- scales[1:(i - 1)]
-        ns <- i-1
+        scalesdt <- scalesdt[1:(i - 1)]
+        ns <- i - 1
         break
       }
       scalog[i] <- sqrt(sum(abs(coefs[nt_ini:nt_end, i]) ^ 2))
@@ -173,23 +183,23 @@ scalogram <-
     scalog <- scalog / sqrt(scalesdt)
   }
 
-  fourier_factor <- cwt$fourier_factor
+  fourierfactor <- cwt$fourierfactor
 
   if (makefigure) {
 
     if (figureperiod) {
-      X <- fourier_factor * scalesdt
-      xlab <- "Period"
+      X <- fourierfactor * scalesdt
+      if (is.null(xlab)) xlab <- "Period"
     } else {
       X <- scalesdt
-      xlab <- "Scale"
+      if (is.null(xlab)) xlab <- "Scale"
     }
 
     if (powerscales) {
-      plot(log2(X), scalog, type = "l", xlab = xlab, ylab = "Scalogram", main = "Scalogram", xaxt = "n")
+      plot(log2(X), scalog, type = "l", xlab = xlab, ylab = ylab, main = main, xaxt = "n")
       axis(side = 1, at = floor(log2(X)), labels = 2^(floor(log2(X))))
     } else {
-      plot(X, scalog, type = "l", xlab = xlab, ylab = "Scalogram", main = "Scalogram", xaxt = "n")
+      plot(X, scalog, type = "l", xlab = xlab, ylab = ylab, main = main, xaxt = "n")
       axis(side = 1, at = X[1 + floor((0:8) * (ns - 1) / 8)])
     }
 
@@ -198,7 +208,7 @@ scalogram <-
 return(list(
   scalog = scalog,
   scales = scalesdt,
-  fourier_factor = fourier_factor
+  fourierfactor = fourierfactor
   ))
 
 }

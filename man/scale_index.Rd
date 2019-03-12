@@ -14,7 +14,10 @@ scale_index(signal,
                    waverad = NULL,
                    border_effects = c("BE", "INNER", "PER", "SYM"),
                    makefigure = TRUE,
-                   figureperiod = TRUE)
+                   figureperiod = TRUE,
+                   xlab = NULL,
+                   ylab = "Scale index",
+                   main = "Scale Index")
 }
 \arguments{
 \item{signal}{A vector containing the signal whose scale indices are wanted.}
@@ -40,8 +43,8 @@ difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slowe
 (Morlet, DoG or Paul).}
 
 \item{waverad}{Numeric. The radius of the wavelet used in the computations for the cone
-of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.}
+of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+\eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.}
 
 \item{border_effects}{A string, equal to "BE", "INNER", "PER" or "SYM", which indicates
 how to manage the border effects which arise usually when a convolution is performed on
@@ -61,6 +64,13 @@ plotted.}
 
 \item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
 of scales.}
+
+\item{xlab}{A string giving a custom X axis label. If NULL (default) the X label is
+either "s1" or "Period of s1" depending on the value of \code{figureperiod}.}
+
+\item{ylab}{A string giving a custom Y axis label.}
+
+\item{main}{A string giving a custom main title for the figure.}
 }
 \value{
 A list with the following fields:
@@ -71,7 +81,7 @@ A list with the following fields:
 \item \code{smin}: A vector with the scales \eqn{s_{min}}.
 \item \code{scalog_smax}: A vector with the maximum scalogram values \eqn{S(s_{max})}.
 \item \code{scalog_smin}: A vector with the minimum scalogram values \eqn{S(s_{min})}.
-\item \code{fourier_factor}: A factor for converting scales to periods.
+\item \code{fourierfactor}: A factor for converting scales into periods.
 }
 }
 \description{
@@ -81,10 +91,10 @@ the minimum scale (see Benítez et al. 2010).
 
 The scale index of a signal in the scale interval \eqn{[s_0,s_1]} is given by the
 quotient \deqn{\frac{S(s_{min})}{S(s_{max})},}{S(s_{min})/S(s_{max})} where \eqn{S} is
-the scalogram, \eqn{s_{max} in [s_0,s_1]} is the smallest scale such that
-\eqn{S(s)\le S(s_{max})} for all \eqn{s in [s_0,s_1]}, and
-\eqn{s_{min} in [s_{max},2s_1]} is the smallest scale such that
-\eqn{S(s_{min})\le S(s)} for all \eqn{s in [s_{max},2s_1]}.
+the scalogram, \eqn{s_{max} \in [s_0,s_1]} is the smallest scale such that
+\eqn{S(s)\le S(s_{max})} for all \eqn{s \in [s_0,s_1]}, and
+\eqn{s_{min} \in [s_{max},2s_1]} is the smallest scale such that
+\eqn{S(s_{min})\le S(s)} for all \eqn{s \in [s_{max},2s_1]}.
 }
 \section{References}{
 

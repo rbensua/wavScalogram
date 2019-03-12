@@ -23,7 +23,10 @@
 #'            parallel = FALSE,
 #'            makefigure = TRUE,
 #'            time_values = NULL,
-#'            figureperiod = TRUE)
+#'            figureperiod = TRUE,
+#'            xlab = "Time",
+#'            ylab = NULL,
+#'            main = "-log2(WSD)")
 #'
 #' @param signal1 A vector containing the first signal.
 #' @param signal2 A vector containing the second signal (its length should be equal to
@@ -33,7 +36,7 @@
 #' and the number of suboctaves per octave for constructing power 2 scales (following
 #' Torrence and Compo 1998). If NULL, they are automatically computed.
 #' @param windowrad Integer. Time radius for the windows, measured in \code{dt}. By
-#' default, it is set to \eqn{celing(length(signal1) / 20)}.
+#' default, it is set to \eqn{ceiling(length(signal1) / 20)}.
 #' @param rdist Integer. Log-scale radius for the windows measured in suboctaves. By
 #' default, it is set to \eqn{ceiling(length(scales) / 20)}.
 #' @param delta_t Integer. Increment of time for the construction of windows central
@@ -45,8 +48,8 @@
 #' @param wparam The corresponding nondimensional parameter for the wavelet function
 #' (Morlet, DoG or Paul).
 #' @param waverad Numeric. The radius of the wavelet used in the computations for the cone
-#' of influence. If it is not specified, it is computed by \code{wavelet_radius} for DoG
-#' and Paul wavelets. For Haar and Morlet it is assumed to be 1 and 3 respectively.
+#' of influence. If it is not specified, it is asumed to be \eqn{\sqrt{2}} for Morlet and DoG,
+#' \eqn{1/\sqrt{2}} for Paul and 0.5 for Haar.
 #' @param border_effects String, equal to "BE", "INNER", "PER" or "SYM",
 #' which indicates how to manage the border effects which arise usually when a convolution
 #' is performed on finite-lenght signals.
@@ -95,6 +98,10 @@
 #' time values for the figure. If NULL (default), it will be computed starting at 0.
 #' @param figureperiod Logical. If TRUE (default), periods are used in the figure instead
 #' of scales.
+#' @param xlab A string giving a custom X axis label.
+#' @param ylab A string giving a custom Y axis label. If NULL (default) the Y label is
+#' either "Scale" or "Period" depending on the value of \code{figureperiod}.
+#' @param main A string giving a custom main title for the figure.
 #'
 #' @importFrom parallel parApply detectCores makeCluster stopCluster
 #' @importFrom abind abind
@@ -116,7 +123,7 @@
 #' \item \code{signif05}: A logical matrix of size \code{length(tcentral)} x
 #' \code{length(scales)}. If TRUE, the corresponding point of the \code{wsd} matrix is in
 #' the 5\% significance.
-#' \item \code{fourier_factor}: A factor for converting scales to periods.
+#' \item \code{fourierfactor}: A factor for converting scales into periods.
 #' \item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
 #' values of the maximum scale from which there are border effects for the respective
 #' central time.
@@ -165,7 +172,10 @@ wsd <-
            parallel = FALSE,
            makefigure = TRUE,
            time_values = NULL,
-           figureperiod = TRUE) {
+           figureperiod = TRUE,
+           xlab = "Time",
+           ylab = NULL,
+           main = "-log2(WSD)") {
 
   #  require(abind)
 
@@ -173,13 +183,12 @@ wsd <-
     wname <- match.arg(wname)
 
     if (is.null(waverad)) {
-      if (wname == "MORLET") {
-        waverad <- 3
-      } else if ((wname == "HAAR") || (wname == "HAAR2")) {
+      if ((wname == "MORLET") || (wname == "DOG")) {
+        waverad <- sqrt(2)
+      } else if (wname == "PAUL") {
+        waverad <- 1 / sqrt(2)
+      } else { # HAAR
         waverad <- 0.5
-      } else {
-        waverad <- wavelet_radius(wname = wname, wparam = wparam)
-        waverad <- waverad$left
       }
     }
 
@@ -202,9 +211,12 @@ wsd <-
       print("Windowrad re-adjusted.")
     }
 
+    fourierfactor <- fourier_factor(wname = wname, wparam = wparam)
+
     if (is.null(scaleparam)) {
+      scmin <- 2 / fourierfactor
       scmax <- floor((nt - 2 * windowrad) / (2 * waverad))
-      scaleparam <- c(2 * dt, scmax * dt, ceiling(256 / (log2(scmax) - 1)))
+      scaleparam <- c(scmin * dt, scmax * dt, ceiling(256 / log2(scmax / scmin)))
     }
 
     scalesdt <- pow2scales(scaleparam)
@@ -423,18 +435,17 @@ wsd <-
     ### Make figure
 
     tcentraldt <- wsc1$tcentral
-    fourier_factor <- wsc1$fourier_factor
 
     if (makefigure) {
 
       if (figureperiod) {
-        Y <- fourier_factor * scalesdt
-        coi <- fourier_factor * coi_wsc
-        Yname <- "Period"
+        Y <- fourierfactor * scalesdt
+        coi <- fourierfactor * coi_wsc
+        if (is.null(ylab)) ylab <- "Period"
       } else {
         Y <- scalesdt
         coi <- coi_wsc
-        Yname <- "Scale"
+        if (is.null(ylab)) ylab <- "Scale"
       }
 
       if (is.null(time_values)) {
@@ -457,9 +468,9 @@ wsd <-
         rdist = rdist,
         sig95 = wsdsig95,
         sig05 = wsdsig05,
-        Xname = "Time",
-        Yname = Yname,
-        Zname = "-log2(WSD)"
+        Xname = xlab,
+        Yname = ylab,
+        Zname = main
       )
 
     }
@@ -472,7 +483,7 @@ wsd <-
       rdist = rdist,
       signif95 = wsdsig95,
       signif05 = wsdsig05,
-      fourier_factor = fourier_factor,
+      fourierfactor = fourierfactor,
       coi_maxscale = coi_wsc
     ))
 
