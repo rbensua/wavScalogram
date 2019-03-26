@@ -11,7 +11,8 @@ wsd(signal1,
            windowrad = NULL,
            rdist = NULL,
            delta_t = NULL,
-           normalize = FALSE,
+           normalize = c("NO", "ENERGY", "MAX", "SCALE"),
+           refscale = NULL,
            wname = c("MORLET", "DOG", "PAUL", "HAAR", "HAAR2"),
            wparam = NULL,
            waverad = NULL,
@@ -51,7 +52,13 @@ default, it is set to \eqn{ceiling(length(scales) / 20)}.}
 times, measured in \code{dt}. By default, it is set to
 \eqn{ceiling(length(signal1) / 256)}.}
 
-\item{normalize}{Logical. Set to TRUE if the signals use different units.}
+\item{normalize}{String, equal to "NO", "ENERGY", "MAX" or "SCALE". If "ENERGY", signals are
+divided by their respective energies. If "MAX", each signal is divided by the maximum
+value attained by its scalogram. In these two cases, \code{energy_density} must be TRUE.
+Finally, if "SCALE", each signal is divided by their scalogram value at scale
+\code{refscale}.}
+
+\item{refscale}{Numeric. The reference scale for \code{normalize}.}
 
 \item{wname}{A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.}
@@ -101,16 +108,17 @@ even divisions by zero.
   (\eqn{= 1}) or mix (in \eqn{(0,1)}) difference between scalograms. Default value is
   set to \eqn{0.02}.}
 
-\item{compensation}{Numeric in \eqn{[0,1]}. It is an alternative to \code{wscnoise} for
+\item{compensation}{Numeric. It is an alternative to \code{wscnoise} for
 preventing numerical errors or non-relevant high relative differences when scalogram
-values are close to zero (see Bolós et al. 2017).}
+values are close to zero (see Bolós et al. 2017). It should be a non-negative
+relatively small value.}
 
 \item{energy_density}{Logical. If TRUE (default), divide the scalograms by the square
 root of the scales for convert them into energy density. Note that it does not affect
 the results if \code{wscnoise} \eqn{= 0}.}
 
-\item{parallel}{Logical. If TRUE (default) uses function \code{parApply} from package
-\code{parallel} for the Montecarlo simulations. When FALSE it uses the normal
+\item{parallel}{Logical. If TRUE, it uses function \code{parApply} from package
+\code{parallel} for the Montecarlo simulations. When FALSE (default) it uses the normal
 \code{apply} function.}
 
 \item{makefigure}{Logical. If TRUE (default), a figure with the WSD is plotted.}

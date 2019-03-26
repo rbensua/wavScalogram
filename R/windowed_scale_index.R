@@ -85,6 +85,7 @@
 #' \itemize{
 #' \item \code{wsi}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
 #' containing the values of the corresponding windowed scale indices.
+#' \item \code{s0}: The scale \eqn{s_0}.
 #' \item \code{s1}: The vector of scales \eqn{s_1}.
 #' \item \code{smax}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
 #' containing the scales \eqn{s_{max}}.
@@ -96,6 +97,7 @@
 #' containing the values of the corresponding scalograms at scales \eqn{s_{min}}.
 #' \item \code{tcentral}: The vector of central times used in the computation of
 #' \code{wsi}.
+#' \item \code{windowrad}: Radius for the time windows, measured in \code{dt}.
 #' \item \code{fourierfactor}: A factor for converting scales into periods.
 #' \item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
 #' values of the maximum scale from which there are border effects.
@@ -317,7 +319,7 @@ windowed_scale_index <-
       )
     } else {
       if (is.null(ylab)) ylab <- "Windowed Scale Index"
-      plot(X, wsi, type = "l", xlab = xlab, ylab = ylab, main = main, xaxt = "n")
+      plot(X, wsi, type = "l", xlab = xlab, ylab = ylab, main = main, ylim = c(0, 1), xaxt = "n")
       axis(side = 1, at = X[1 + floor((0:8) * (nwsi - 1) / 8)])
       abline(v = range(X[(coi > Y)]), lty = 2)
     }
@@ -326,12 +328,14 @@ windowed_scale_index <-
 
   return(list(
     wsi = wsi,
+    s0 = scales[1],
     s1 = s1,
     smax = smax,
     smin = smin,
     scalog_smax = scalog_smax,
     scalog_smin = scalog_smin,
     tcentral = tcentraldt,
+    windowrad = windowrad,
     fourierfactor = fourierfactor,
     coi_maxscale = coi_maxscale
   ))

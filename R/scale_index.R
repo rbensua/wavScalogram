@@ -68,7 +68,8 @@
 #' @return A list with the following fields:
 #' \itemize{
 #' \item \code{si}: A vector with the scale indices.
-#' \item \code{s1}: A vector containing the scales \eqn{s_1}.
+#' \item \code{s0}: The scale \eqn{s_0}.
+#' \item \code{s1}: A vector with the scales \eqn{s_1}.
 #' \item \code{smax}: A vector with the scales \eqn{s_{max}}.
 #' \item \code{smin}: A vector with the scales \eqn{s_{min}}.
 #' \item \code{scalog_smax}: A vector with the maximum scalogram values \eqn{S(s_{max})}.
@@ -236,7 +237,7 @@ scale_index <-
   }
 
   if (makefigure ) {
-    if (length(s1) > 1) {
+    if (ns1 > 1) {
       if (figureperiod) {
         X <- fourierfactor * s1
         if (is.null(xlab)) xlab <- expression('Period of s'[1])
@@ -244,13 +245,20 @@ scale_index <-
         X <- s1
         if (is.null(xlab)) xlab <- expression('s'[1])
       }
-      plot(X, si, type = "l", xlab = xlab, ylab = ylab, main = main)
+      if (powerscales) {
+        plot(log2(X), si, type = "l", xlab = xlab, ylab = ylab, main = main, ylim = c(0, 1), xaxt = "n")
+        axis(side = 1, at = floor(log2(X)), labels = 2^(floor(log2(X))))
+      } else {
+        plot(X, si, type = "l", xlab = xlab, ylab = ylab, main = main, ylim = c(0, 1), xaxt = "n")
+        axis(side = 1, at = X[1 + floor((0:8) * (ns1 - 1) / 8)])
+      }
     } else {
       warning("We can't plot a line with just one point.")
     }
   }
 
 return(list(si = si,
+            s0 = scales[1],
             s1 = s1,
             smax = smax,
             smin = smin,

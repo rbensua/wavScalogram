@@ -305,6 +305,18 @@ cwt_wst <-
   # Make figure
   if (makefigure) {
 
+    if (is.null(time_values)) {
+      X <- seq(0, (nt - 1) * dt, dt)
+    } else {
+      if (length(time_values) != nt) {
+        warning("Invalid length of time_values vector. Changing to default.")
+        X <- seq(0, (nt - 1) * dt, dt)
+      } else {
+      X <- time_values
+      }
+    }
+
+    ylab_aux <- ylab
     if (figureperiod) {
       Y <- fourierfactor * scalesdt
       coi <- fourierfactor * coi_maxscale
@@ -323,27 +335,29 @@ cwt_wst <-
       if (is.null(main)) main <- "Wavelet Power Spectrum"
     }
 
-    if (is.null(time_values)) {
-      X <- seq(0, (nt - 1) * dt, dt)
+    if (ns > 1) {
+      wavPlot(
+        Z = Z,
+        X = X,
+        Y = Y,
+        Ylog = powerscales,
+        coi = coi,
+        Xname = xlab,
+        Yname = ylab,
+        Zname = main
+      )
     } else {
-      if (length(time_values) != nt) {
-        warning("Invalid length of time_values vector. Changing to default.")
-        X <- seq(0, (nt - 1) * dt, dt)
-      } else {
-      X <- time_values
+      if (is.null(ylab_aux)) {
+        if (energy_density) {
+          ylab <- "Wavelet Power Spectrum / Scales"
+        } else {
+          ylab <- "Wavelet Power Spectrum"
+        }
       }
+      plot(X, Z, type = "l", xlab = xlab, ylab = ylab, main = main, xaxt = "n")
+      axis(side = 1, at = X[1 + floor((0:8) * (nt - 1) / 8)])
+      abline(v = range(X[(coi > Y)]), lty = 2)
     }
-
-    wavPlot(
-      Z = Z,
-      X = X,
-      Y = Y,
-      Ylog = powerscales,
-      coi = coi,
-      Xname = xlab,
-      Yname = ylab,
-      Zname = main
-    )
 
   }
 

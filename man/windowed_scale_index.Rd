@@ -92,6 +92,7 @@ A list with the following fields:
 \itemize{
 \item \code{wsi}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
 containing the values of the corresponding windowed scale indices.
+\item \code{s0}: The scale \eqn{s_0}.
 \item \code{s1}: The vector of scales \eqn{s_1}.
 \item \code{smax}: A matrix of size \code{length(tcentral)} x \code{length(s1)}
 containing the scales \eqn{s_{max}}.
@@ -103,6 +104,7 @@ containing the values of the corresponding scalograms at scales \eqn{s_{max}}.
 containing the values of the corresponding scalograms at scales \eqn{s_{min}}.
 \item \code{tcentral}: The vector of central times used in the computation of
 \code{wsi}.
+\item \code{windowrad}: Radius for the time windows, measured in \code{dt}.
 \item \code{fourierfactor}: A factor for converting scales into periods.
 \item \code{coi_maxscale}: A vector of length \code{length(tcentral)} containing the
 values of the maximum scale from which there are border effects.

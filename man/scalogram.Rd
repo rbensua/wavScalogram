@@ -77,6 +77,8 @@ A list with the following fields:
 \item \code{scalog}: A vector of length \code{length(scales)}, containing the values of
 the scalogram at each scale.
 \item \code{scales}: The vector of scales.
+\item \code{energy}: If \code{energy_density} is TRUE, it is the \eqn{L^2} norm of
+\code{scalog}.
 \item \code{fourierfactor}: A factor for converting scales into periods.
 }
 }

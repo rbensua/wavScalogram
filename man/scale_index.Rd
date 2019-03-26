@@ -76,7 +76,8 @@ either "s1" or "Period of s1" depending on the value of \code{figureperiod}.}
 A list with the following fields:
 \itemize{
 \item \code{si}: A vector with the scale indices.
-\item \code{s1}: A vector containing the scales \eqn{s_1}.
+\item \code{s0}: The scale \eqn{s_0}.
+\item \code{s1}: A vector with the scales \eqn{s_1}.
 \item \code{smax}: A vector with the scales \eqn{s_{max}}.
 \item \code{smin}: A vector with the scales \eqn{s_{min}}.
 \item \code{scalog_smax}: A vector with the maximum scalogram values \eqn{S(s_{max})}.

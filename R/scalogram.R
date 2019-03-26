@@ -72,6 +72,8 @@
 #' \item \code{scalog}: A vector of length \code{length(scales)}, containing the values of
 #' the scalogram at each scale.
 #' \item \code{scales}: The vector of scales.
+#' \item \code{energy}: If \code{energy_density} is TRUE, it is the \eqn{L^2} norm of
+#' \code{scalog}.
 #' \item \code{fourierfactor}: A factor for converting scales into periods.
 #' }
 #'
@@ -146,11 +148,10 @@ scalogram <-
                    border_effects = border_effects_cwt,
                    makefigure = FALSE)
 
-  coefs <- cwt$coefs
   scalesdt <- cwt$scales
   scales <- scalesdt / dt
-
   ns <- length(scales)
+  coefs <- matrix(cwt$coefs, nrow = nt, ncol = ns)
 
   scalog <- numeric(ns)
 
@@ -179,8 +180,10 @@ scalogram <-
 
   }
 
+  energy <- NA
   if (energy_density) {
     scalog <- scalog / sqrt(scalesdt)
+    energy <- sqrt(sum(scalog ^ 2))
   }
 
   fourierfactor <- cwt$fourierfactor
@@ -208,6 +211,7 @@ scalogram <-
 return(list(
   scalog = scalog,
   scales = scalesdt,
+  energy = energy,
   fourierfactor = fourierfactor
   ))
 
