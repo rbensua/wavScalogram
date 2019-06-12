@@ -14,9 +14,9 @@ the number ofsuboctaves per octave.}
 A vector with all the scales.
 }
 \description{
-This function constructs power 2 scales from a vector of three elements
-with the minimum scale, the maximum scale and the number of suboctaves per octave
-(following Torrence and Compo 1998).
+This function constructs power 2 scales (i.e. using a base 2 logarithmic
+scale) from a vector of three elements with the minimum scale, the maximum scale and
+the number of suboctaves per octave, following Torrence and Compo 1998.
 }
 \section{References}{
 

@@ -4,7 +4,8 @@
 \alias{scale_index}
 \title{Scale index of a signal}
 \usage{
-scale_index(signal,
+scale_index(signal = NULL,
+                   scalog = NULL,
                    dt = 1,
                    scales = NULL,
                    powerscales = TRUE,
@@ -15,6 +16,7 @@ scale_index(signal,
                    border_effects = c("BE", "INNER", "PER", "SYM"),
                    makefigure = TRUE,
                    figureperiod = TRUE,
+                   plot_scalog = FALSE,
                    xlab = NULL,
                    ylab = "Scale index",
                    main = "Scale Index")
@@ -22,16 +24,27 @@ scale_index(signal,
 \arguments{
 \item{signal}{A vector containing the signal whose scale indices are wanted.}
 
+\item{scalog}{A vector containing the scalogram from which the scale indices are going
+to be computed. If \code{scalog} is not \code{NULL}, then \code{signal}, \code{waverad}
+and \code{border_effects} are not necessary and they are ignored.}
+
 \item{dt}{Numeric. The time step of the signals.}
 
-\item{scales}{A vector containing the wavelet scales at wich
-the scalogram is computed. This can be either a vector with all the scales, or
-(if \code{powerscales} is TRUE) following Torrence and Compo 1998, a vector of three
-elements with the minimum scale, the maximum scale and the number of suboctaves per
-octave. If NULL, they are automatically computed.}
+\item{scales}{A vector containing the wavelet scales at wich the scalogram
+is computed. This can be either a vector with all the scales or, following Torrence
+and Compo 1998, a vector of 3 elements with the minimum scale, the maximum scale and
+the number of suboctaves per octave (in this case, \code{powerscales} must be TRUE in
+order to construct power 2 scales using a base 2 logarithmic scale). If \code{scales}
+is NULL, they are automatically constructed.}
 
-\item{powerscales}{Logical. If TRUE (default), construct power 2 scales from
-\code{scales}. If \code{scales} is NULL, they are automatically computed.}
+\item{powerscales}{Logical. It must be TRUE (default) in these cases:
+\itemize{
+\item If \code{scales} are power 2 scales, i.e. they use a base 2 logarithmic scale.
+\item If we want to construct power 2 scales automatically. In this case, \code{scales}
+must be \code{NULL}.
+\item If we want to construct power 2 scales from \code{scales}. In this case,
+\code{length(scales)} must be 3.
+}}
 
 \item{s1}{A vector containing the scales \eqn{s_1}. The scale indices are computed in
 the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale in \code{scales}.}
@@ -65,6 +78,9 @@ plotted.}
 \item{figureperiod}{Logical. If TRUE (default), periods are used in the figure instead
 of scales.}
 
+\item{plot_scalog}{Logical. If TRUE, it plots the scalogram from which the scale indices
+are computed.}
+
 \item{xlab}{A string giving a custom X axis label. If NULL (default) the X label is
 either "s1" or "Period of s1" depending on the value of \code{figureperiod}.}
 
@@ -80,6 +96,8 @@ A list with the following fields:
 \item \code{s1}: A vector with the scales \eqn{s_1}.
 \item \code{smax}: A vector with the scales \eqn{s_{max}}.
 \item \code{smin}: A vector with the scales \eqn{s_{min}}.
+\item \code{scalog}: A vector with the scalogram from which the scale indices are
+computed.
 \item \code{scalog_smax}: A vector with the maximum scalogram values \eqn{S(s_{max})}.
 \item \code{scalog_smin}: A vector with the minimum scalogram values \eqn{S(s_{min})}.
 \item \code{fourierfactor}: A factor for converting scales into periods.
@@ -105,9 +123,15 @@ non-periodicity. Comput. Math. Appl. 60 (2010), no. 3, 634-641.
 }
 
 \examples{
+
 dt <- 0.1
 time <- seq(0, 50, dt)
 signal <- c(sin(pi * time), sin(pi * time / 2))
 si <- scale_index(signal = signal, dt = dt)
+
+# Another way, giving the scalogram instead of the signal:
+
+sc <- scalogram(signal = signal, dt = dt, energy_density = FALSE, makefigure = FALSE)
+si <- scale_index(scalog = sc$scalog, scales = sc$scales, dt = dt)
 
 }

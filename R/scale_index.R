@@ -11,7 +11,8 @@
 #' \eqn{s_{min} \in [s_{max},2s_1]} is the smallest scale such that
 #' \eqn{S(s_{min})\le S(s)} for all \eqn{s \in [s_{max},2s_1]}.
 #'
-#' @usage scale_index(signal,
+#' @usage scale_index(signal = NULL,
+#'                    scalog = NULL,
 #'                    dt = 1,
 #'                    scales = NULL,
 #'                    powerscales = TRUE,
@@ -22,19 +23,30 @@
 #'                    border_effects = c("BE", "INNER", "PER", "SYM"),
 #'                    makefigure = TRUE,
 #'                    figureperiod = TRUE,
+#'                    plot_scalog = FALSE,
 #'                    xlab = NULL,
 #'                    ylab = "Scale index",
 #'                    main = "Scale Index")
 #'
 #' @param signal A vector containing the signal whose scale indices are wanted.
+#' @param scalog A vector containing the scalogram from which the scale indices are going
+#' to be computed. If \code{scalog} is not \code{NULL}, then \code{signal}, \code{waverad}
+#' and \code{border_effects} are not necessary and they are ignored.
 #' @param dt Numeric. The time step of the signals.
-#' @param scales A vector containing the wavelet scales at wich
-#' the scalogram is computed. This can be either a vector with all the scales, or
-#' (if \code{powerscales} is TRUE) following Torrence and Compo 1998, a vector of three
-#' elements with the minimum scale, the maximum scale and the number of suboctaves per
-#' octave. If NULL, they are automatically computed.
-#' @param powerscales Logical. If TRUE (default), construct power 2 scales from
-#' \code{scales}. If \code{scales} is NULL, they are automatically computed.
+#' @param scales A vector containing the wavelet scales at wich the scalogram
+#' is computed. This can be either a vector with all the scales or, following Torrence
+#' and Compo 1998, a vector of 3 elements with the minimum scale, the maximum scale and
+#' the number of suboctaves per octave (in this case, \code{powerscales} must be TRUE in
+#' order to construct power 2 scales using a base 2 logarithmic scale). If \code{scales}
+#' is NULL, they are automatically constructed.
+#' @param powerscales Logical. It must be TRUE (default) in these cases:
+#' \itemize{
+#' \item If \code{scales} are power 2 scales, i.e. they use a base 2 logarithmic scale.
+#' \item If we want to construct power 2 scales automatically. In this case, \code{scales}
+#' must be \code{NULL}.
+#' \item If we want to construct power 2 scales from \code{scales}. In this case,
+#' \code{length(scales)} must be 3.
+#' }
 #' @param s1 A vector containing the scales \eqn{s_1}. The scale indices are computed in
 #' the intervals \eqn{[s_0,s_1]}, where \eqn{s_0} is the minimum scale in \code{scales}.
 #' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
@@ -60,6 +72,8 @@
 #' plotted.
 #' @param figureperiod Logical. If TRUE (default), periods are used in the figure instead
 #' of scales.
+#' @param plot_scalog Logical. If TRUE, it plots the scalogram from which the scale indices
+#' are computed.
 #' @param xlab A string giving a custom X axis label. If NULL (default) the X label is
 #' either "s1" or "Period of s1" depending on the value of \code{figureperiod}.
 #' @param ylab A string giving a custom Y axis label.
@@ -72,16 +86,24 @@
 #' \item \code{s1}: A vector with the scales \eqn{s_1}.
 #' \item \code{smax}: A vector with the scales \eqn{s_{max}}.
 #' \item \code{smin}: A vector with the scales \eqn{s_{min}}.
+#' \item \code{scalog}: A vector with the scalogram from which the scale indices are
+#' computed.
 #' \item \code{scalog_smax}: A vector with the maximum scalogram values \eqn{S(s_{max})}.
 #' \item \code{scalog_smin}: A vector with the minimum scalogram values \eqn{S(s_{min})}.
 #' \item \code{fourierfactor}: A factor for converting scales into periods.
 #' }
 #'
 #' @examples
+#'
 #' dt <- 0.1
 #' time <- seq(0, 50, dt)
 #' signal <- c(sin(pi * time), sin(pi * time / 2))
 #' si <- scale_index(signal = signal, dt = dt)
+#'
+#' # Another way, giving the scalogram instead of the signal:
+#'
+#' sc <- scalogram(signal = signal, dt = dt, energy_density = FALSE, makefigure = FALSE)
+#' si <- scale_index(scalog = sc$scalog, scales = sc$scales, dt = dt)
 #'
 #' @section References:
 #'
@@ -92,7 +114,8 @@
 #'
 
 scale_index <-
-  function(signal,
+  function(signal = NULL,
+           scalog = NULL,
            dt = 1,
            scales = NULL,
            powerscales = TRUE,
@@ -103,6 +126,7 @@ scale_index <-
            border_effects = c("BE", "INNER", "PER", "SYM"),
            makefigure = TRUE,
            figureperiod = TRUE,
+           plot_scalog = FALSE,
            xlab = NULL,
            ylab = "Scale index",
            main = "Scale Index") {
@@ -110,59 +134,68 @@ scale_index <-
   wname <- toupper(wname)
   wname <- match.arg(wname)
 
-  if (is.null(waverad)) {
-    if ((wname == "MORLET") || (wname == "DOG")) {
-      waverad <- sqrt(2)
-    } else if (wname == "PAUL") {
-      waverad <- 1 / sqrt(2)
-    } else { # HAAR
-      waverad <- 0.5
-    }
-  }
-
-  border_effects <- toupper(border_effects)
-  border_effects <- match.arg(border_effects)
-
-  nt <- length(signal)
-
-  if (is.unsorted(s1)) {
-    s1 <- sort(s1)
-  }
-
   fourierfactor <- fourier_factor(wname = wname, wparam = wparam)
 
-  if (is.null(scales)) {
-    scmin <- 2 * dt / fourierfactor
-    if (is.null(s1)) {
-      scmax <- floor(nt / (2 * waverad)) * dt
-    } else {
-      scmax <- 2 * s1[length(s1)]
-    }
-    if (powerscales) {
-      scales <- pow2scales(c(scmin, scmax, ceiling(256 / log2(scmax / scmin))))
-    } else {
-      scales <- seq(scmin, scmax, by = (scmax - scmin) / 256)
-    }
-  } else {
-    ns <- length(scales)
-    if (powerscales && ns == 3) {
+  if (!is.null(scales)) {
+    if (powerscales && length(scales) == 3) {
       scales <- pow2scales(scales)
     } else {
-      if (powerscales && ns != 3) {
-        warning("The length of scales is not 3. Powerscales set to FALSE.")
-        powerscales <- FALSE
-      }
       if (is.unsorted(scales)) {
         warning("Scales were not sorted.")
         scales <- sort(scales)
       }
     }
+    ns <- length(scales)
   }
 
-  ns <- length(scales)
+  if (is.null(scalog)) {
+
+    if (is.null(signal)) {
+      stop("We need a signal or a scalogram (sc).")
+    }
+
+    if (is.null(waverad)) {
+      if ((wname == "MORLET") || (wname == "DOG")) {
+        waverad <- sqrt(2)
+      } else if (wname == "PAUL") {
+        waverad <- 1 / sqrt(2)
+      } else { # HAAR
+        waverad <- 0.5
+      }
+    }
+
+    border_effects <- toupper(border_effects)
+    border_effects <- match.arg(border_effects)
+
+    nt <- length(signal)
+
+    if (is.null(scales)) {
+      scmin <- 2 * dt / fourierfactor
+      if (is.null(s1)) {
+        scmax <- floor(nt / (2 * waverad)) * dt
+      } else {
+        scmax <- 2 * max(s1)
+      }
+      if (powerscales) {
+        scales <- pow2scales(c(scmin, scmax, ceiling(256 / log2(scmax / scmin))))
+      } else {
+        scales <- seq(scmin, scmax, by = (scmax - scmin) / 256)
+      }
+      ns <- length(scales)
+    }
+
+  } else {
+
+    if (is.null(scales)) {
+      stop("Scales are needed.")
+    }
+    if (ns != length(scalog)) {
+      stop("The number of scales does not match with length(scalog).")
+    }
+
+  }
 
   if (is.null(s1)) {
-    s1null <- TRUE
     if (scales[ns] < 2 * scales[1]) {
       stop("We need larger scales.")
     }
@@ -174,7 +207,9 @@ scale_index <-
       index_2s1[i] <- max(which(scales <= 2 * s1[i]))
     }
   } else {
-    s1null <- FALSE
+    if (is.unsorted(s1)) {
+      s1 <- sort(s1)
+    }
     ns1 <- length(s1)
     if (s1[1] < scales[1]){
       stop("s1 must be >= the minimum scale.")
@@ -196,14 +231,21 @@ scale_index <-
     stop("We need more scales.")
   }
 
-  sc <- scalogram(signal = signal, dt = dt,
-                  scales = scales, powerscales = FALSE,
-                  wname = wname, wparam = wparam, waverad = waverad,
-                  border_effects = border_effects,
-                  energy_density = FALSE,
-                  makefigure = FALSE)
+  if (is.null(scalog)) {
 
-  scalog <- sc$scalog
+    sc <- scalogram(signal = signal, dt = dt,
+                    scales = scales, powerscales = FALSE,
+                    wname = wname, wparam = wparam, waverad = waverad,
+                    border_effects = border_effects,
+                    energy_density = FALSE,
+                    makefigure = FALSE)
+
+    scalog <- sc$scalog
+
+  } else {
+    scalog <- scalog[1:ns]
+  }
+
   epsilon <- max(scalog) * 1e-6 # This is considered the "numerical zero".
 
   si <- matrix(0, nrow = ns1, ncol = 1)
@@ -236,7 +278,28 @@ scale_index <-
 
   }
 
+  if (plot_scalog) {
+
+    if (figureperiod) {
+      X <- fourierfactor * scales
+      xlab_scalog <- "Period"
+    } else {
+      X <- scales
+      xlab_scalog <- "Scale"
+    }
+
+    if (powerscales) {
+      plot(log2(X), scalog, type = "l", xlab = xlab_scalog, ylab = "Scalogram", main = "Scalogram", xaxt = "n")
+      axis(side = 1, at = floor(log2(X)), labels = 2^(floor(log2(X))))
+    } else {
+      plot(X, scalog, type = "l", xlab = xlab_scalog, ylab = "Scalogram", main = "Scalogram", xaxt = "n")
+      axis(side = 1, at = X[1 + floor((0:8) * (ns - 1) / 8)])
+    }
+
+  }
+
   if (makefigure ) {
+
     if (ns1 > 1) {
       if (figureperiod) {
         X <- fourierfactor * s1
@@ -245,6 +308,7 @@ scale_index <-
         X <- s1
         if (is.null(xlab)) xlab <- expression('s'[1])
       }
+
       if (powerscales) {
         plot(log2(X), si, type = "l", xlab = xlab, ylab = ylab, main = main, ylim = c(0, 1), xaxt = "n")
         axis(side = 1, at = floor(log2(X)), labels = 2^(floor(log2(X))))
@@ -255,6 +319,7 @@ scale_index <-
     } else {
       warning("We can't plot a line with just one point.")
     }
+
   }
 
 return(list(si = si,
@@ -262,6 +327,7 @@ return(list(si = si,
             s1 = s1,
             smax = smax,
             smin = smin,
+            scalog = scalog,
             scalog_smax = scalog_smax,
             scalog_smin = scalog_smin,
             fourierfactor = fourierfactor)

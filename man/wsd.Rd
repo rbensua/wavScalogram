@@ -40,7 +40,7 @@ that of \code{signal1}).}
 
 \item{scaleparam}{A vector of three elements with the minimum scale, the maximum scale
 and the number of suboctaves per octave for constructing power 2 scales (following
-Torrence and Compo 1998). If NULL, they are automatically computed.}
+Torrence and Compo 1998). If NULL, they are automatically constructed.}
 
 \item{windowrad}{Integer. Time radius for the windows, measured in \code{dt}. By
 default, it is set to \eqn{ceiling(length(signal1) / 20)}.}

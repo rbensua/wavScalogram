@@ -31,13 +31,20 @@
 #'
 #' @param signal A vector containing the signal whose scalogram is wanted.
 #' @param dt Numeric. The time step of the signal.
-#' @param scales A vector containing the wavelet scales at wich the scalogram is computed.
-#' This can be either a vector with all the scales, or (if \code{powerscales} is TRUE)
-#' following Torrence and Compo 1998, a vector of three elements with the minimum scale,
-#' the maximum scale and the number of suboctaves per octave. If NULL, they are
-#' automatically computed.
-#' @param powerscales Logical. If TRUE (default), construct power 2 scales from
-#' \code{scales}. If \code{scales} is NULL, they are automatically computed.
+#' @param scales A vector containing the wavelet scales at wich the scalogram
+#' is computed. This can be either a vector with all the scales or, following Torrence
+#' and Compo 1998, a vector of 3 elements with the minimum scale, the maximum scale and
+#' the number of suboctaves per octave (in this case, \code{powerscales} must be TRUE in
+#' order to construct power 2 scales using a base 2 logarithmic scale). If \code{scales}
+#' is NULL, they are automatically constructed.
+#' @param powerscales Logical. It must be TRUE (default) in these cases:
+#' \itemize{
+#' \item If \code{scales} are power 2 scales, i.e. they use a base 2 logarithmic scale.
+#' \item If we want to construct power 2 scales automatically. In this case, \code{scales}
+#' must be \code{NULL}.
+#' \item If we want to construct power 2 scales from \code{scales}. In this case,
+#' \code{length(scales)} must be 3.
+#' }
 #' @param wname A string, equal to "MORLET", "DOG", "PAUL", "HAAR" or "HAAR2". The
 #' difference between "HAAR" and "HAAR2" is that "HAAR2" is more accurate but slower.
 #' @param wparam The corresponding nondimensional parameter for the wavelet function
@@ -129,11 +136,6 @@ scalogram <-
     border_effects_cwt <- "BE"
   } else {
     border_effects_cwt <- border_effects
-  }
-
-  if (!is.null(scales) && powerscales && length(scales) != 3) {
-    warning("The length of scales is not 3. Powerscales set to FALSE.")
-    powerscales <- FALSE
   }
 
   nt <- length(signal)

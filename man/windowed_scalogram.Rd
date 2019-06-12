@@ -27,14 +27,21 @@ windowed_scalogram(signal,
 
 \item{dt}{Numeric. The time step of the signal.}
 
-\item{scales}{A vector containing the wavelet scales at wich
-the windowed scalogram is computed. This can be either a vector with all the scales, or
-(if \code{powerscales} is TRUE) following Torrence and Compo 1998, a vector of three
-elements with the minimum scale, the maximum scale and the number of suboctaves per
-octave. If NULL, they are automatically computed.}
+\item{scales}{A vector containing the wavelet scales at wich the windowed scalograms
+are computed. This can be either a vector with all the scales or, following Torrence
+and Compo 1998, a vector of 3 elements with the minimum scale, the maximum scale and
+the number of suboctaves per octave (in this case, \code{powerscales} must be TRUE in
+order to construct power 2 scales using a base 2 logarithmic scale). If \code{scales}
+is NULL, they are automatically constructed.}
 
-\item{powerscales}{Logical. If TRUE (default), construct power 2 scales from
-\code{scales}. If \code{scales} is NULL, they are automatically computed.}
+\item{powerscales}{Logical. It must be TRUE (default) in these cases:
+\itemize{
+\item If \code{scales} are power 2 scales, i.e. they use a base 2 logarithmic scale.
+\item If we want to construct power 2 scales automatically. In this case, \code{scales}
+must be \code{NULL}.
+\item If we want to construct power 2 scales from \code{scales}. In this case,
+\code{length(scales)} must be 3.
+}}
 
 \item{windowrad}{Integer. Time radius for the windows, measured in \code{dt}. By
 default, it is set to \eqn{ceiling(length(signal) / 20)}.}
